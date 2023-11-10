@@ -31,9 +31,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     foreach ($_POST['quantities'] as $productId => $quantity) {
         updateCartQuantity($conn, $productId, intval($quantity));
     }
-    // Redirect to the same page using GET request to avoid form resubmission
-    header("Location: cart.php");
-    exit;
 }
 
 // Function to display the cart
@@ -46,12 +43,22 @@ function displayCart($conn) {
         echo "<ul>";
         
         foreach ($_SESSION['cart'] as $productId => $details) {
+            // Fetch product name
+            $stmt = $conn->prepare("SELECT name FROM products WHERE product_id = ?");
+            $stmt->bind_param("i", $productId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $productName = "Unknown";
+            if ($product = $result->fetch_assoc()) {
+                $productName = $product['name'];
+            }
+
             $subtotal = $details['quantity'] * $details['price'];
             $totalPrice += $subtotal;
 
             // Display product name and form to update quantity
             echo "<li>";
-            echo "<strong>Product ID: " . htmlspecialchars($productId) . "</strong> ";
+            echo "<strong>" . htmlspecialchars($productName) . "</strong> ";
             echo "<input type='number' name='quantities[$productId]' value='" . $details['quantity'] . "' min='0' onchange='updateCart()'> ";
             echo "<span>@ $" . htmlspecialchars($details['price']) . " each</span> ";
             echo "<span>Subtotal: $" . number_format($subtotal, 2) . "</span>";
