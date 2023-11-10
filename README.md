@@ -65,3 +65,14 @@ INSERT INTO products (name, description, price, stock, image) VALUES
 
 
 ----------------------
+
+TO-DO:
+
+-The user is authenticated using username and password. Define a reasonable password policy that
+balances complexity and security. Include explicit support for a password blacklist to exclude the
+most common passwords. The credentials must be reasonably safe from on-line brute-force attacks
+and off-line TMTO/Rainbow attacks
+
+-See what TLS mean
+-fixing the payments and understanding the blockchain
+-server and PHP configuration and protection from attacks
