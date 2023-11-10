@@ -1,26 +1,33 @@
 <?php
 session_start();
 
-// Check if the user is logged in, otherwise redirect to login page
+// Redirect to login page if not logged in
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: login.html");
+    header("location: login.php");
     exit;
 }
 
-$username = $_SESSION["username"];
+// Placeholder for cart display logic
+$cartDisplay = "";
+if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
+    $cartDisplay = "<p>You have " . count($_SESSION['cart']) . " item(s) in your cart.</p>";
+    $cartDisplay .= '<a href="cart.php">View Cart</a>';
+} else {
+    $cartDisplay = "<p>Your cart is empty.</p>";
+}
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Welcome</title>
+    <title>Welcome to the Web Shop</title>
 </head>
 <body>
-    <h1>Welcome, <?php echo htmlspecialchars($username); ?>!</h1>
-    <p>This is the user dashboard page.</p>
-    <nav>
+    <h1>Welcome, <?php echo htmlspecialchars($_SESSION["username"]); ?>!</h1>
+    <p>
+        <a href="products.php">View Products</a> |
+        <a href="cart.php">Show cart</a> |
         <a href="logout.php">Logout</a>
-    </nav>
-    <!-- Additional user-specific content goes here -->
+    </p>
 </body>
 </html>
