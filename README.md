@@ -65,14 +65,32 @@ INSERT INTO products (name, description, price, stock, image) VALUES
 
 
 ----------------------
+/***********************************/
+* To do 
 
-TO-DO:
+* server and PHP configuration and protection from attacks
 
--The user is authenticated using username and password. Define a reasonable password policy that
+* The user is authenticated using username and password. Define a reasonable password policy that
 balances complexity and security. Include explicit support for a password blacklist to exclude the
 most common passwords. The credentials must be reasonably safe from on-line brute-force attacks
-and off-line TMTO/Rainbow attacks
+and off-line TMTO/Rainbow attacks.
 
--See what TLS mean
--fixing the payments and understanding the blockchain
--server and PHP configuration and protection from attacks
+* Secure the connection via TLS 
+
+* (visual) design of the web shop 
+
+* Checkout and payment. The payment should be processed via digital currency utilizing a blockchain
+which you can implement yourself or take a library of your choice. Once the payment is finished
+the user should be presented with a receipt with all details of the purchase. The following is a list
+of requirements for the payment using a blockchain:
+– The key generation for the wallet must be real, i.e., use actual asymmetric cryptography, same
+for signatures.
+– There should be proof-of-work with a correct hash of the block.
+– A new block with a transaction should be added to the chain of blocks (you don’t need to
+implement a consensus algorithm).
+
+/**********************************/
+
+
+
+
