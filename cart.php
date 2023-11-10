@@ -7,6 +7,7 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     exit;
 }
 
+
 // Function to update item quantity in the cart
 function updateCartQuantity($conn, $productId, $quantity) {
     if ($quantity <= 0) {
@@ -71,6 +72,8 @@ function displayCart($conn) {
     } else {
         echo "<p>Your cart is empty.</p>";
     }
+
+    
 }
 
 ?>
