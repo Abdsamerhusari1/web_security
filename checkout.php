@@ -20,7 +20,8 @@ if (empty($_SESSION['cart'])) {
     // Redirect to cart page or show a message
     echo "<p>Your cart is empty. Please add items to your cart before checking out.</p>";
     echo "<a href='products.php'>Return to Products</a>";
-    exit;
+    exit; 
+}
 
 
 // Retrieve user ID and cart items from the session
