@@ -53,4 +53,15 @@ CREATE TABLE order_items (
 After typing each SQL command, click the "Go" button in phpMyAdmin to execute the query
 
 go to https://localhost/webshop/test_connection.php
+
+
+INSERT INTO users (username, password_hash, address) VALUES 
+('testuser1', '$2y$10$iP0Gy6dlb86Z5WY2UKxxNOpG4UjLzTQnreSUzABiTWjbeh11Wqw3a', '123 Test Address, City, Country'),
+('testuser2', '$2y$10$Sec5Il/l0O6188TIblWgh.8dt98xyhKZpYk1Sish6l9.k/e95.V7C', '456 Another St, City, Country');
+
+INSERT INTO products (name, description, price, stock, image) VALUES 
+('First Product', 'Description for first product', 99.99, 10, '1.png'),
+('Second Product', 'Description for second product', 149.99, 5, '2.png');
+
+
 ----------------------
