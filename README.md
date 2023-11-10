@@ -49,4 +49,5 @@ CREATE TABLE order_items (
 
 After typing each SQL command, click the "Go" button in phpMyAdmin to execute the query
 
+go to https://localhost/webshop/test_connection.php
 ----------------------
