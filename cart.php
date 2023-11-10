@@ -1,70 +1,89 @@
 <?php
-session_start(); // Start the session
+session_start();
+require_once('db_connect.php');
 
-// Initialize shopping cart
-if (!isset($_SESSION['cart'])) {
-    $_SESSION['cart'] = array();
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
+    header("location: login.php");
+    exit;
 }
 
-// Function to add an item to the cart
-function addToCart($productId, $quantity) {
-    // Check if the product already exists in the cart
-    if (isset($_SESSION['cart'][$productId])) {
-        // If the product exists, increase the quantity
-        $_SESSION['cart'][$productId] += $quantity;
+// Function to update item quantity in the cart
+function updateCartQuantity($conn, $productId, $quantity) {
+    if ($quantity <= 0) {
+        unset($_SESSION['cart'][$productId]); // Remove item from cart if quantity is 0 or less
     } else {
-        // If the product does not exist, add it to the cart
-        $_SESSION['cart'][$productId] = $quantity;
+        // Fetch product price
+        $stmt = $conn->prepare("SELECT price FROM products WHERE product_id = ?");
+        $stmt->bind_param("i", $productId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($product = $result->fetch_assoc()) {
+            $_SESSION['cart'][$productId] = [
+                'quantity' => $quantity,
+                'price' => $product['price']
+            ];
+        }
     }
 }
 
-// Handle Add to Cart action
-if (isset($_POST['add_to_cart'])) {
-    $productId = $_POST['product_id']; // Get the product ID from the POST request
-    $quantity = $_POST['quantity'] ?? 1; // Get the quantity, default to 1 if not set
-
-    addToCart($productId, $quantity); // Add the product to the cart
-}
-
-// Display the cart
-echo "<h2>Your Shopping Cart</h2>";
-if (!empty($_SESSION['cart'])) {
-    echo "<ul>";
-    foreach ($_SESSION['cart'] as $productId => $quantity) {
-        echo "<li>Product ID: $productId, Quantity: $quantity</li>";
+// Check if the quantity update is triggered
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    foreach ($_POST['quantities'] as $productId => $quantity) {
+        updateCartQuantity($conn, $productId, intval($quantity));
     }
-    echo "</ul>";
-} else {
-    echo "<p>Your cart is empty.</p>";
+    // Redirect to the same page using GET request to avoid form resubmission
+    header("Location: cart.php");
+    exit;
 }
 
-// The HTML form for adding products to the cart
+// Function to display the cart
+function displayCart($conn) {
+    $totalPrice = 0;
+
+    if (!empty($_SESSION['cart'])) {
+        echo "<h2>Your Shopping Cart</h2>";
+        echo "<form id='cart-form' action='cart.php' method='post'>";
+        echo "<ul>";
+        
+        foreach ($_SESSION['cart'] as $productId => $details) {
+            $subtotal = $details['quantity'] * $details['price'];
+            $totalPrice += $subtotal;
+
+            // Display product name and form to update quantity
+            echo "<li>";
+            echo "<strong>Product ID: " . htmlspecialchars($productId) . "</strong> ";
+            echo "<input type='number' name='quantities[$productId]' value='" . $details['quantity'] . "' min='0' onchange='updateCart()'> ";
+            echo "<span>@ $" . htmlspecialchars($details['price']) . " each</span> ";
+            echo "<span>Subtotal: $" . number_format($subtotal, 2) . "</span>";
+            echo "</li>";
+        }
+        
+        echo "</ul>";
+        echo "<strong>Total Price: $" . number_format($totalPrice, 2) . "</strong>";
+        echo "</form>";
+    } else {
+        echo "<p>Your cart is empty.</p>";
+    }
+}
+
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Shopping Cart</title>
+    <title>Your Shopping Cart</title>
+    <script>
+    function updateCart() {
+        document.getElementById('cart-form').submit();
+    }
+    </script>
 </head>
 <body>
-    <h1>Products</h1>
-    <!-- Example product listing -->
-    <div id="product-1">
-        <h3>Product 1</h3>
-        <p>Price: $100</p>
-        <form method="post" action="">
-            <input type="hidden" name="product_id" value="1">
-            <input type="number" name="quantity" value="1" min="1">
-            <input type="submit" name="add_to_cart" value="Add to Cart">
-        </form>
-    </div>
-    <div id="product-2">
-        <h3>Product 2</h3>
-        <p>Price: $200</p>
-        <form method="post" action="">
-            <input type="hidden" name="product_id" value="2">
-            <input type="number" name="quantity" value="1" min="1">
-            <input type="submit" name="add_to_cart" value="Add to Cart">
-        </form>
-    </div>
+    <?php displayCart($conn); ?>
+    <a href="products.php">Continue Shopping</a> | 
+    <a href="checkout.php">Checkout</a> | 
+    <a href="logout.php">Logout</a>
 </body>
 </html>
+
+<?php $conn->close(); ?>
