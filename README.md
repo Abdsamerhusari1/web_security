@@ -66,7 +66,7 @@ INSERT INTO products (name, description, price, stock, image) VALUES
 
 ----------------------
 /***********************************/
-* To do *
+* To do 
 
 * server and PHP configuration and protection from attacks
 
