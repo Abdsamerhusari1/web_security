@@ -1,6 +1,6 @@
 <?php
 if (isset($error_message) && !empty($error_message)) {
-	echo '<p style="color: red;">' . $error_message . '</p>';
+    echo '<p style="color: red;">' . $error_message . '</p>';
 }
 ?>
 
@@ -11,11 +11,7 @@ session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-include 'backend/db_connect.php'; 
-include 'receipt/KeyGenerator.php';
-include 'receipt/Transaction.php';
-include 'receipt/Blockchain.php';
-include 'receipt/ReceiptGenerator.php';
+include 'backend/db_connect.php';
 
 // Redirect to login with a return path if not logged in
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
@@ -42,6 +38,17 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     exit;
 }
 
+// Function to send POST requests to the blockchain server
+function postRequest($url, $data) {
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $result = curl_exec($ch);
+    curl_close($ch);
+    return $result;
+}
+
 // If the user is logged in but the cart is empty, show a message
 if (empty($_SESSION['cart'])) {
     echo "<p>Your cart is empty. Please add items to your cart before checking out.</p>";
@@ -62,19 +69,7 @@ foreach ($cartItems as $productId => $item) {
 	$totalAmount += $item['price'] * $item['quantity'];
 }
 
-// Placeholder for Blockchain transaction
-// Initialize blockchain
-$blockchain = new Blockchain();
 
-// Example transaction data (replace with actual data)
-$senderKeys = KeyGenerator::generateKeys();
-$receiverKeys = KeyGenerator::generateKeys();
-
-$transactionData = Transaction::create($senderKeys['publicKey'], $receiverKeys['publicKey'], $totalAmount);
-$signedTransaction = Transaction::sign($transactionData, $senderKeys['privateKey']);
-
-// Add transaction to blockchain
-$blockchain->addBlock([$signedTransaction], '0'); // '0' is a placeholder for the previous hash
 
 // Insert order into database
 $stmt = $conn->prepare("INSERT INTO orders (user_id, total) VALUES (?, ?)");
@@ -89,8 +84,13 @@ foreach ($cartItems as $productId => $item) {
 	$stmt->execute();
 }
 
-// Generate a receipt for the transaction
-$receipt = ReceiptGenerator::generate($blockchain, $signedTransaction);
+// Send the transaction to the blockchain server
+$transactionData = array(
+    'sender' => 'shop_address', // Replace with the shop's blockchain address
+    'recipient' => 'user_blockchain_address', // Replace with the user's blockchain address
+    'amount' => $totalAmount
+);
+$blockchainResponse = postRequest('http://localhost:5001/transactions/new', $transactionData);
 
 // Clear the cart from the session after checkout
 unset($_SESSION['cart']);

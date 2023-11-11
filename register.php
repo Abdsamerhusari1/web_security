@@ -7,6 +7,8 @@ if (isset($error_message) && !empty($error_message)) {
 	<?php
 
 	require_once('backend/db_connect.php');
+	require_once 'receipt/KeyGenerator.php'; 
+
 
 	define('PEPPER', 'kQa9e4v8Jy3Cf1u5Rm7N0w2Hz8G6pX');
 
@@ -110,6 +112,23 @@ if (isset($error_message) && !empty($error_message)) {
 					$insert->bind_param("sss", $username, $password_hash, $address);
 					
 					if ($insert->execute()) {
+						$userId = $conn->insert_id;
+					
+						// Generate keys
+						$keys = KeyGenerator::generateKeys();
+					
+						// Save public key in users table
+						$update = $conn->prepare("UPDATE users SET public_key = ? WHERE user_id = ?");
+						$update->bind_param("si", $keys['publicKey'], $userId);
+						$update->execute();
+						$update->close();
+					
+						// Save private key in user_private_keys table
+						$insertKey = $conn->prepare("INSERT INTO user_private_keys (user_id, private_key) VALUES (?, ?)");
+						$insertKey->bind_param("is", $userId, $keys['privateKey']);
+						$insertKey->execute();
+						$insertKey->close();
+					
 						$successMessage = "User registered successfully.";
 					} else {
 						$errorMessage = "Error: " . $conn->error;

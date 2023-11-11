@@ -1,24 +1,25 @@
 <?php
-if (isset($error_message) && !empty($error_message)) {
-	echo '<p style="color: red;">' . $error_message . '</p>';
-}
-?>
-<?php
 
 class KeyGenerator {
-	public static function generateKeys() {
-		$config = [
-			"digest_alg" => "sha256",
-			"private_key_bits" => 2048,
-			"private_key_type" => OPENSSL_KEYTYPE_RSA,
-		];
+    public static function generateKeys() {
+        $config = array(
+            "digest_alg" => "sha256",
+            "private_key_bits" => 2048,
+            "private_key_type" => OPENSSL_KEYTYPE_RSA,
+        );
 
-		$res = openssl_pkey_new($config);
-		openssl_pkey_export($res, $privKey);
-		$pubKey = openssl_pkey_get_details($res);
-		$pubKey = $pubKey["key"];
+        // Create the private and public key
+        $res = openssl_pkey_new($config);
 
-		return ['privateKey' => $privKey, 'publicKey' => $pubKey];
-	}
+        // Extract the private key into $privateKey
+        openssl_pkey_export($res, $privateKey);
+
+        // Extract the public key into $publicKey
+        $publicKey = openssl_pkey_get_details($res);
+        $publicKey = $publicKey["key"];
+
+        return array('privateKey' => $privateKey, 'publicKey' => $publicKey);
+    }
 }
+
 ?>

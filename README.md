@@ -53,6 +53,14 @@ CREATE TABLE order_items (
     FOREIGN KEY (product_id) REFERENCES products(product_id)
 );
 ```
+ALTER TABLE users
+ADD COLUMN public_key VARCHAR(2048);
+
+CREATE TABLE user_private_keys (
+    user_id INT PRIMARY KEY,
+    private_key VARCHAR(2048) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
 
 - After typing each SQL command, click the "Go" button in phpMyAdmin to execute the query.
 
