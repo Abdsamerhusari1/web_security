@@ -41,6 +41,7 @@ $result = $conn->query($query);
             <div>
                 <a href="index.php" class="px-3 hover:text-gray-300">Home</a>
                 <a href="cart.php" class="px-3 hover:text-gray-300">Cart</a>
+                
                 <?php if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true): ?>
                     <a href="logout.php" class="px-3 hover:text-gray-300">Logout</a>
                 <?php else: ?>
@@ -49,6 +50,13 @@ $result = $conn->query($query);
             </div>
         </div>
     </nav>
+
+    <!-- Welcome Message -->
+    <?php if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true): ?>
+        <div class="mt-4 pl-9 mx-24">
+            <span class="text-2xl text-indigo-600 font-bold">Welcome, <?php echo htmlspecialchars($_SESSION["username"]); ?>!</span>
+        </div>
+    <?php endif; ?>
 
     <!-- Main Content Area -->
     <div class="container mx-auto px-4 mt-8">
