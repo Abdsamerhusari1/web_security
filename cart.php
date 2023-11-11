@@ -8,7 +8,7 @@ if (isset($error_message) && !empty($error_message)) {
 
 <?php
 session_start();
-require_once('db_connect.php');
+require_once('backend/db_connect.php');
 
 // Function to update item quantity in the cart
 function updateCartQuantity($conn, $productId, $quantity) {

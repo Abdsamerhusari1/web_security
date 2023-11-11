@@ -8,7 +8,7 @@ if (isset($error_message) && !empty($error_message)) {
 
 <?php
 session_start();
-require_once('db_connect.php'); // Adjust the path as needed
+require_once('backend/db_connect.php'); // Adjust the path as needed
 
 define('PEPPER', 'kQa9e4v8Jy3Cf1u5Rm7N0w2Hz8G6pX');
 

@@ -6,7 +6,7 @@ if (isset($error_message) && !empty($error_message)) {
 
 <?php
 session_start();
-require_once('db_connect.php');
+require_once('backend/db_connect.php');
 
 function addToCart($productId, $quantity, $price) {
     if (!isset($_SESSION['cart'][$productId])) {
@@ -59,7 +59,7 @@ $result = $conn->query($query);
                 <?php while ($row = $result->fetch_assoc()): ?>
                     <div class="bg-white p-4 shadow rounded">
                         <h3 class="text-lg font-semibold"><?php echo htmlspecialchars($row['name']); ?></h3>
-                        <img src="uploads/<?php echo htmlspecialchars($row['image']); ?>" alt="<?php echo htmlspecialchars($row['name']); ?>" class="w-32 h-auto my-2">
+                        <img src="images/<?php echo htmlspecialchars($row['image']); ?>" alt="<?php echo htmlspecialchars($row['name']); ?>" class="w-32 h-auto my-2">
                         <p><?php echo htmlspecialchars($row['description']); ?></p>
                         <p>Price: $<?php echo htmlspecialchars($row['price']); ?></p>
                         <?php if ($row['stock'] > 0): ?>

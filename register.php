@@ -6,7 +6,7 @@ if (isset($error_message) && !empty($error_message)) {
 	<title>Register</title>
 	<?php
 
-	require_once('db_connect.php');
+	require_once('backend/db_connect.php');
 
 	define('PEPPER', 'kQa9e4v8Jy3Cf1u5Rm7N0w2Hz8G6pX');
 
@@ -66,7 +66,7 @@ if (isset($error_message) && !empty($error_message)) {
 		}
 
 		// Load password blacklist
-		$blacklist = file('password-blacklist.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+		$blacklist = file('blacklist/password-blacklist.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
 		// Check if the password contains any word from the blacklist
 		foreach ($blacklist as $blacklistedWord) {

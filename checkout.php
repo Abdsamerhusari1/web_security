@@ -11,11 +11,11 @@ session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-include 'db_connect.php'; 
-include 'KeyGenerator.php';
-include 'Transaction.php';
-include 'Blockchain.php';
-include 'ReceiptGenerator.php';
+include 'backend/db_connect.php'; 
+include 'receipt/KeyGenerator.php';
+include 'receipt/Transaction.php';
+include 'receipt/Blockchain.php';
+include 'receipt/ReceiptGenerator.php';
 
 // Redirect to login with a return path if not logged in
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
