@@ -5,7 +5,77 @@
 </head>
 <body>
     <?php
-    require_once('db_connect.php'); // Adjust this path as needed
+    require_once('db_connect.php');
+
+    define('PEPPER', 'kQa9e4v8Jy3Cf1u5Rm7N0w2Hz8G6pX');
+
+    // salting by PASSWORD_DEFAULT which also use (default hashing algorithm bcrypt) and pepper
+    function pepperedHash($password) {
+        return password_hash($password . PEPPER, PASSWORD_DEFAULT);
+    }
+
+    function isPasswordStrongEnough($password, $username, $address) {
+        // Minimum Length Check
+        if (strlen($password) < 8) {
+            return "Password must be at least 8 characters long.";
+        }
+
+        // Character Diversity Check
+        if (!preg_match('/[A-Z]/', $password) ||
+            !preg_match('/[a-z]/', $password) ||
+            !preg_match('/[0-9]/', $password) ||
+            !preg_match('/[\W]/', $password)) {
+            return "Password must include uppercase and lowercase letters, numbers, and special characters.";
+        }
+
+        // Check for Personal Information
+        if (strpos($password, $username) !== false || strpos($password, $address) !== false) {
+            return "Password should not contain your username or address.";
+        }
+
+        // Sequential Characters Check
+        $length = strlen($password);
+        for ($i = 0; $i < $length - 2; $i++) {
+            // Numerical sequence
+            if (is_numeric($password[$i]) && 
+                is_numeric($password[$i + 1]) && 
+                is_numeric($password[$i + 2])) {
+                if (($password[$i + 1] == $password[$i] + 1) && 
+                    ($password[$i + 2] == $password[$i] + 2)) {
+                    return "Password should not contain sequential numerical characters.";
+                }
+            }
+
+            // Alphabetical sequence
+            if (ctype_alpha($password[$i]) && 
+                ctype_alpha($password[$i + 1]) && 
+                ctype_alpha($password[$i + 2])) {
+                if ((ord(strtolower($password[$i + 1])) == ord(strtolower($password[$i])) + 1) && 
+                    (ord(strtolower($password[$i + 2])) == ord(strtolower($password[$i])) + 2)) {
+                    return "Password should not contain sequential alphabetical characters.";
+                }
+            }
+        }
+
+        // Repetitive Characters Check
+        for ($i = 0; $i < $length - 2; $i++) {
+            if ($password[$i] == $password[$i + 1] && $password[$i] == $password[$i + 2]) {
+                return "Password should not contain repetitive characters.";
+            }
+        }
+
+        // Load password blacklist
+        $blacklist = file('password-blacklist.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+        // Check if the password contains any word from the blacklist
+        foreach ($blacklist as $blacklistedWord) {
+            if (strpos($password, $blacklistedWord) !== false) {
+                return "The password cannot contain common words or patterns (e.g., 'password').";
+            }
+        }
+
+        return true;
+    }
 
     $errorMessage = "";
     $successMessage = "";
@@ -18,30 +88,37 @@
         if (empty($username) || empty($password) || empty($address)) {
             $errorMessage = "Please fill in all fields.";
         } else {
-            // Check if username already exists
-            $stmt = $conn->prepare("SELECT user_id FROM users WHERE username = ?");
-            $stmt->bind_param("s", $username);
-            $stmt->execute();
-            $stmt->store_result();
-
-            if ($stmt->num_rows > 0) {
-                $errorMessage = "Username already taken.";
+            // Validate password strength
+            $passwordStrengthCheck = isPasswordStrongEnough($password, $username, $address);
+            if ($passwordStrengthCheck !== true) {
+                $errorMessage = $passwordStrengthCheck;
             } else {
-                $password_hash = password_hash($password, PASSWORD_DEFAULT);
+                // Check if username already exists
+                $stmt = $conn->prepare("SELECT user_id FROM users WHERE username = ?");
+                $stmt->bind_param("s", $username);
+                $stmt->execute();
+                $stmt->store_result();
 
-                $insert = $conn->prepare("INSERT INTO users (username, password_hash, address) VALUES (?, ?, ?)");
-                $insert->bind_param("sss", $username, $password_hash, $address);
-                
-                if ($insert->execute()) {
-                    $successMessage = "User registered successfully. <a href='login.php'>Login here</a>";
+                if ($stmt->num_rows > 0) {
+                    $errorMessage = "Username already taken.";
                 } else {
-                    $errorMessage = "Error: " . $conn->error;
+                    // Hash the password with the pepper
+                    $password_hash = pepperedHash($password);
+
+                    $insert = $conn->prepare("INSERT INTO users (username, password_hash, address) VALUES (?, ?, ?)");
+                    $insert->bind_param("sss", $username, $password_hash, $address);
+                    
+                    if ($insert->execute()) {
+                        $successMessage = "User registered successfully.";
+                    } else {
+                        $errorMessage = "Error: " . $conn->error;
+                    }
+
+                    $insert->close();
                 }
 
-                $insert->close();
+                $stmt->close();
             }
-
-            $stmt->close();
         }
 
         $conn->close();
@@ -54,16 +131,22 @@
         <a href="login.php">Login</a>
     </nav>
 
+
     <h1>User Registration</h1>
 
-    <?php 
-    if (!empty($errorMessage)) {
-        echo '<p style="color: red;">' . htmlspecialchars($errorMessage) . '</p>';
-    }
-    if (!empty($successMessage)) {
-        echo '<p style="color: green;">' . htmlspecialchars($successMessage) . '</p>';
-    }
-    ?>
+    <div>
+        <?php 
+        if (!empty($errorMessage)) {
+            echo '<p style="color: red;">' . htmlspecialchars($errorMessage) . '</p>';
+        }
+        if (!empty($successMessage)) {
+            echo '<p style="color: green;">' . htmlspecialchars($successMessage) . '</p>';
+            echo '<form action="login.php" method="get">';
+            echo '<input type="submit" value="Go to Login" />';
+            echo '</form>';
+        }
+        ?>
+    </div>
 
     <form action="register.php" method="post">
         <label for="username">Username:</label><br>
@@ -77,5 +160,17 @@
 
         <input type="submit" value="Register">
     </form>
+
+    <!-- Password Criteria -->
+    <div>
+        <h3>Password Requirements</h3>
+        <ul>
+            <li>Minimum 8 characters long</li>
+            <li>Must include uppercase and lowercase letters, numbers, and special characters</li>
+            <li>Should not contain your username or address</li>
+            <li>Should not contain sequential or repetitive characters (like '123' or 'aaa')</li>
+            <li>Should not contain any commen word (like 'password')</li>
+        </ul>
+    </div>
 </body>
 </html>
