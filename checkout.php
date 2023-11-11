@@ -1,9 +1,15 @@
 <?php
+if (isset($error_message) && !empty($error_message)) {
+	echo '<p style="color: red;">' . $error_message . '</p>';
+}
+?>
+<?php
+
 session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-include 'db_connect.php'; // Ensure this path is correct
+include 'db_connect.php'; 
 include 'KeyGenerator.php';
 include 'Transaction.php';
 include 'Blockchain.php';
@@ -11,16 +17,16 @@ include 'ReceiptGenerator.php';
 
 // Check if user is logged in
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: login.php");
-    exit;
+	header("location: login.php");
+	exit;
 }
 
 // Check if the cart is empty
 if (empty($_SESSION['cart'])) {
-    // Redirect to cart page or show a message
-    echo "<p>Your cart is empty. Please add items to your cart before checking out.</p>";
-    echo "<a href='products.php'>Return to Products</a>";
-    exit; 
+	// Redirect to cart page or show a message
+	echo "<p>Your cart is empty. Please add items to your cart before checking out.</p>";
+	echo "<a href='products.php'>Return to Products</a>";
+	exit; 
 }
 
 
@@ -31,7 +37,7 @@ $cartItems = $_SESSION['cart']; // Assuming cart is stored in session
 // Calculate total amount from cart items
 $totalAmount = 0;
 foreach ($cartItems as $productId => $item) {
-    $totalAmount += $item['price'] * $item['quantity'];
+	$totalAmount += $item['price'] * $item['quantity'];
 }
 
 // Placeholder for Blockchain transaction
@@ -56,9 +62,9 @@ $orderId = $stmt->insert_id;
 
 // Insert each cart item into order_items table
 foreach ($cartItems as $productId => $item) {
-    $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("iiid", $orderId, $productId, $item['quantity'], $item['price']);
-    $stmt->execute();
+	$stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
+	$stmt->bind_param("iiid", $orderId, $productId, $item['quantity'], $item['price']);
+	$stmt->execute();
 }
 
 // Generate a receipt for the transaction
@@ -71,7 +77,7 @@ echo "<p>Date: " . date("Y-m-d H:i:s") . "</p>";
 echo "<table>";
 echo "<tr><th>Product ID</th><th>Quantity</th><th>Price</th></tr>";
 foreach ($cartItems as $productId => $item) {
-    echo "<tr><td>{$productId}</td><td>{$item['quantity']}</td><td>\${$item['price']}</td></tr>";
+	echo "<tr><td>{$productId}</td><td>{$item['quantity']}</td><td>\${$item['price']}</td></tr>";
 }
 echo "</table>";
 echo "<p>Total Amount: \${$totalAmount}</p>";
