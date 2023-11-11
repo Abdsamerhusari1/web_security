@@ -73,7 +73,7 @@ INSERT INTO products (name, description, price, stock, image) VALUES
 * The user is authenticated using username and password. Define a reasonable password policy that
 balances complexity and security. Include explicit support for a password blacklist to exclude the
 most common passwords. The credentials must be reasonably safe from on-line brute-force attacks
-and off-line TMTO/Rainbow attacks.
+and off-line TMTO/Rainbow attacks. <done>
 
 * Secure the connection via TLS 
 
@@ -93,4 +93,34 @@ implement a consensus algorithm).
 
 
 
+<Password criteria>
+
+the link to the black list:
+https://github.com/OWASP/passfault/blob/master/wordlists/wordlists/10k-worst-passwords.txt
+
+*Password Requirements:
+Minimum 8 characters long
+Must include uppercase and lowercase letters, numbers, and special characters
+Should not contain your username or address
+Should not contain sequential or repetitive characters (like '123' or 'aaa')
+Should not contain any commen word (like 'password')
+
+*for the pepper we use the string:
+kQa9e4v8Jy3Cf1u5Rm7N0w2Hz8G6pX
+
+*password_hash is doing the following:
+
+Concatenating the password with the pepper.
+Generating a random salt.
+Hashing the concatenated string with the salt.
+Returning the complete hash string which includes information about the hashing algorithm, the generated salt, and the hashed password.
+
+*Time-Memory Trade-Off (TMTO)/Rainbow Table Attacks: Salting effectively counters rainbow table attacks, as it ensures each password hash is unique.
+
+
+*To implement a brute force attack mitigation strategy, we added a system that tracks the number of consecutive failed login attempts for each user and imposes a delay on further attempts after a certain threshold is reached.
+-After each failed login attempt, increment a counter in the user's session or database.
+-If the counter exceeds a certain number (e.g., 3 attempts), record the time of the last failed attempt.
+-When the user tries to log in, check the time of the last failed attempt. If it was less than 30 minutes ago and the counter -is over the threshold, deny the login attempt.
+-If the login is successful, reset the counter.
 
