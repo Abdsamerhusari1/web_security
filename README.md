@@ -80,18 +80,7 @@ INSERT INTO products (name, description, price, stock, image) VALUES
 ('Fourth Product', 'Description for Fourth product', 49.99, 0, '4.png');
 ```
 
-## To-Do List
-
-### Server and PHP Configuration:
-
-- Ensure server and PHP configurations are optimized for security against common attacks.
-
-### User Authentication:
-
-- Implement a robust password policy.
-- Passwords should be a minimum of 8 characters, include a mix of cases, numbers, and symbols, and avoid common patterns.
-- Utilize a password blacklist to prevent the use of common passwords: [OWASP 10k Worst Passwords](https://github.com/OWASP/passfault/blob/master/wordlists/wordlists/10k-worst-passwords.txt).
-
+-------------------------------
 ### Password Handling:
 
 - Use a pepper for added security: `kQa9e4v8Jy3Cf1u5Rm7N0w2Hz8G6pX`.
@@ -105,3 +94,26 @@ INSERT INTO products (name, description, price, stock, image) VALUES
 - If the counter exceeds a certain number (e.g., 3 attempts), record the time of the last failed attempt.
 - When the user tries to log in, check the time of the last failed attempt. If it was less than 30 minutes ago and the counter -is over the threshold, deny the login attempt.
 - If the login is successful, reset the counter.
+
+--------------------------------
+## To-Do List
+* server and PHP configuration and protection from attacks
+
+* The user is authenticated using username and password. Define a reasonable password policy that
+balances complexity and security. Include explicit support for a password blacklist to exclude the
+most common passwords. The credentials must be reasonably safe from on-line brute-force attacks
+and off-line TMTO/Rainbow attacks. **done**
+
+* Secure the connection via TLS 
+
+* (visual) design of the web shop **done**
+
+* Checkout and payment. The payment should be processed via digital currency utilizing a blockchain
+which you can implement yourself or take a library of your choice. Once the payment is finished
+the user should be presented with a receipt with all details of the purchase. The following is a list
+of requirements for the payment using a blockchain:
+– The key generation for the wallet must be real, i.e., use actual asymmetric cryptography, same
+for signatures.
+– There should be proof-of-work with a correct hash of the block.
+– A new block with a transaction should be added to the chain of blocks (you don’t need to
+implement a consensus algorithm). **working on**
