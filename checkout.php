@@ -92,41 +92,74 @@ foreach ($cartItems as $productId => $item) {
 // Generate a receipt for the transaction
 $receipt = ReceiptGenerator::generate($blockchain, $signedTransaction);
 
-// Format and display the receipt
-echo "<h1>Order Receipt</h1>";
-echo "<p>Order ID: " . $orderId . "</p>";
-echo "<p>Date: " . date("Y-m-d H:i:s") . "</p>";
-echo "<table>";
-echo "<tr><th>Product ID</th><th>Quantity</th><th>Price</th></tr>";
-foreach ($cartItems as $productId => $item) {
-	echo "<tr><td>{$productId}</td><td>{$item['quantity']}</td><td>\${$item['price']}</td></tr>";
-}
-echo "</table>";
-echo "<p>Total Amount: \${$totalAmount}</p>";
-echo "<p>Blockchain Transaction:</p>";
-echo "<pre>" . print_r($receipt, true) . "</pre>";
-
 // Clear the cart from the session after checkout
 unset($_SESSION['cart']);
 ?>
 
+
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Checkout</title>
+    <title>Receipt</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-xl font-bold mb-4">Checkout</h1>
-
-        <?php if (!empty($error_message)): ?>
-            <p class="text-red-500"><?php echo $error_message; ?></p>
-            <a href="index.php" class="text-blue-500 hover:text-blue-700">Return to Products</a>
+    <div class="container mx-auto mt-10 p-8 bg-white shadow-lg max-w-2xl">
+        <?php if (isset($error_message)): ?>
+            <p class="text-red-500 text-center"><?php echo $error_message; ?></p>
+            <div class="text-center mt-4">
+                <a href="products.php" class="bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded">Return to Products</a>
+            </div>
         <?php else: ?>
-            <!-- Display the checkout information and receipt -->
-            <!-- ... [Your checkout and receipt display logic] ... -->
+            <!-- Receipt Content -->
+            <h2 class="text-3xl font-bold mb-4 text-center">Order Receipt</h2>
+
+            <!-- Order Details -->
+            <div class="mb-6">
+                <p><strong>Order ID:</strong> <?php echo $orderId; ?></p>
+                <p><strong>Date:</strong> <?php echo date("Y-m-d H:i:s"); ?></p>
+            </div>
+
+            <!-- Items Purchased Table -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold mb-2">Items Purchased</h3>
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="border p-3">Product ID</th>
+                            <th class="border p-3">Quantity</th>
+                            <th class="border p-3">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($cartItems as $productId => $item): ?>
+                        <tr>
+                            <td class="border p-3"><?php echo $productId; ?></td>
+                            <td class="border p-3"><?php echo $item['quantity']; ?></td>
+                            <td class="border p-3">$<?php echo number_format($item['price'], 2); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Total Amount -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold">Total Amount</h3>
+                <p class="text-lg">$<?php echo number_format($totalAmount, 2); ?></p>
+            </div>
+
+            <!-- Blockchain Transaction -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold mb-2">Blockchain Transaction</h3>
+                <pre class="bg-gray-200 p-4"><?php echo htmlspecialchars(print_r($receipt, true)); ?></pre>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="index.php" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Continue Shopping</a>
+            </div>
         <?php endif; ?>
     </div>
 </body>
