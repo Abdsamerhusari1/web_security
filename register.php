@@ -3,9 +3,9 @@ if (isset($error_message) && !empty($error_message)) {
 	echo '<p style="color: red;">' . $error_message . '</p>';
 }
 ?>
-	<title>Register</title>
-	<?php
-
+<title>Register</title>
+<?php
+	session_start();
 	require_once('backend/db_connect.php');
 
 	define('PEPPER', 'kQa9e4v8Jy3Cf1u5Rm7N0w2Hz8G6pX');
@@ -110,7 +110,15 @@ if (isset($error_message) && !empty($error_message)) {
 					$insert->bind_param("sss", $username, $password_hash, $address);
 					
 					if ($insert->execute()) {
-						$successMessage = "User registered successfully.";
+						$_SESSION['loggedin'] = true;
+						$_SESSION['user_id'] = $conn->insert_id; // Get the new user's ID
+						$_SESSION['username'] = $username;
+						
+						// Store the success message in a session variable
+    					$_SESSION['successMessage'] = "You have registered successfully and are now logged in.";
+						// Redirect to the homepage
+						header("Location: index.php");
+						exit;
 					} else {
 						$errorMessage = "Error: " . $conn->error;
 					}
@@ -124,53 +132,76 @@ if (isset($error_message) && !empty($error_message)) {
 
 		$conn->close();
 	}
-	?>
+?>
 
-	<nav>
-		<a href="products.php">View Products</a> | 
-		<a href="register.php">Register</a> | 
-		<a href="login.php">Login</a>
-	</nav>
+<!DOCTYPE html>
+<html class="h-full">
+	<head>
+		<meta charset="UTF-8">
+		<title>Register</title>
+		<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+	</head>
+	<body class="bg-gray-100 flex flex-col min-h-screen">
+		<!-- Navigation Bar -->
+		<nav class="bg-gray-800 p-4 text-white">
+			<div class="container mx-auto flex justify-between">
+				<div class="text-lg">Group 2 Shop</div>
+				<div>
+					<a href="index.php" class="px-3 hover:text-gray-300">Home</a>
+					<a href="cart.php" class="px-3 hover:text-gray-300">Cart</a>
+					<a href="login.php" class="px-3 hover:text-gray-300">Login</a>
+				</div>
+			</div>
+		</nav>
 
+		<!-- Main Content Area -->
+		<div class="flex-grow container mx-auto px-4 py-8">
+			<div class="max-w-md mx-auto bg-white p-6 shadow-md">
+				<h1 class="text-2xl font-bold text-center mb-4">User Registration</h1>
 
-	<h1>User Registration</h1>
+				<?php 
+				if (!empty($errorMessage)) {
+					echo '<p class="text-red-500 text-center">' . htmlspecialchars($errorMessage) . '</p>';
+				}
+				if (!empty($successMessage)) {
+					echo '<p class="text-green-500 text-center">' . htmlspecialchars($successMessage) . '</p>';
+				}
+				?>
 
-	<div>
-		<?php 
-		if (!empty($errorMessage)) {
-			echo '<p style="color: red;">' . htmlspecialchars($errorMessage) . '</p>';
-		}
-		if (!empty($successMessage)) {
-			echo '<p style="color: green;">' . htmlspecialchars($successMessage) . '</p>';
-			echo '<form action="login.php" method="get">';
-			echo '<input type="submit" value="Go to Login" />';
-			echo '</form>';
-		}
-		?>
-	</div>
+				<form action="register.php" method="post" class="space-y-4">
+					<div>
+						<label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username:</label>
+						<input type="text" id="username" name="username" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+					</div>
 
-	<form action="register.php" method="post">
-		<label for="username">Username:</label><br>
-		<input type="text" id="username" name="username" required><br>
+					<div>
+						<label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
+						<input type="password" id="password" name="password" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+					</div>
 
-		<label for="password">Password:</label><br>
-		<input type="password" id="password" name="password" required><br>
+					<div>
+						<label for="address" class="block text-gray-700 text-sm font-bold mb-2">Home Address:</label>
+						<textarea id="address" name="address" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+					</div>
 
-		<label for="address">Home Address:</label><br>
-		<textarea id="address" name="address" required></textarea><br>
+					<div class="flex items-center justify-between">
+						<input type="submit" value="Register" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+						<a href="login.php" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Already have an account?</a>
+					</div>
+				</form>
 
-		<input type="submit" value="Register">
-	</form>
-
-	<!-- Password Criteria -->
-	<div>
-		<h3>Password Requirements</h3>
-		<ul>
-			<li>Minimum 8 characters long</li>
-			<li>Must include uppercase and lowercase letters, numbers, and special characters</li>
-			<li>Should not contain your username or address</li>
-			<li>Should not contain sequential or repetitive characters (like '123' or 'aaa')</li>
-			<li>Should not contain any commen word (like 'password')</li>
-		</ul>
-	</div>
-
+			<!-- Password Criteria -->
+			<div class="mt-6">
+				<div class="mt-6 p-4 bg-white rounded shadow">
+					<h3 class="text-md font-semibold mb-2">Password Requirements:</h3>
+					<ul class="list-disc list-inside">
+						<li>Minimum 8 characters long</li>
+						<li>Must include uppercase and lowercase letters, numbers, and special characters</li>
+						<li>Should not contain your username or address</li>
+						<li>Should not contain sequential or repetitive characters (like '123' or 'aaa')</li>
+						<li>Should not contain any common words or patterns (e.g., 'password')</li>
+					</ul>
+				</div>
+			</div>
+	</body>
+</html>
