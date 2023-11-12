@@ -112,7 +112,7 @@ balances complexity and security. Include explicit support for a password blackl
 most common passwords. The credentials must be reasonably safe from on-line brute-force attacks
 and off-line TMTO/Rainbow attacks. **done**
 
-* Secure the connection via TLS 
+* Secure the connection via TLS **working on**
 
 * (visual) design of the web shop **done**
 

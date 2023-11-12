@@ -22,6 +22,12 @@ if (isset($_POST['add_to_cart'])) {
     addToCart($productId, $quantity, $price);
 }
 
+if (isset($_SESSION['successMessage']) && !empty($_SESSION['successMessage'])) {
+    echo '<p class="text-green-600 text-center">' . $_SESSION['successMessage'] . '</p>';
+    // Unset the success message after displaying it so it doesn't show again on page refresh
+    unset($_SESSION['successMessage']);
+}
+
 $query = "SELECT * FROM products";
 $result = $conn->query($query);
 ?>
