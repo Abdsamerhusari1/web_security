@@ -1,4 +1,5 @@
 <?php
+global $conn;
 if (isset($error_message) && !empty($error_message)) {
 	echo '<p style="color: red;">' . $error_message . '</p>';
 }

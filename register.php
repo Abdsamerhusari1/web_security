@@ -17,6 +17,10 @@ if (isset($error_message) && !empty($error_message)) {
 		return password_hash($password . PEPPER, PASSWORD_DEFAULT);
 	}
 
+	function generateBlockchainAddress() {
+		return uniqid(); // Generates a unique ID
+	}
+
 	function isPasswordStrongEnough($password, $username, $address) {
 		// Minimum Length Check
 		if (strlen($password) < 8) {
@@ -108,27 +112,15 @@ if (isset($error_message) && !empty($error_message)) {
 					// Hash the password with the pepper
 					$password_hash = pepperedHash($password);
 
-					$insert = $conn->prepare("INSERT INTO users (username, password_hash, address) VALUES (?, ?, ?)");
-					$insert->bind_param("sss", $username, $password_hash, $address);
+					// Generate a unique blockchain address
+					$blockchainAddress = generateBlockchainAddress();
+
+                    $insert = $conn->prepare("INSERT INTO users (username, password_hash, address, blockchain_address) VALUES (?, ?, ?, ?)");
+                    $insert->bind_param("ssss", $username, $password_hash, $address, $blockchainAddress);
 					
 					if ($insert->execute()) {
 						$userId = $conn->insert_id;
 					
-						// Generate keys
-						$keys = KeyGenerator::generateKeys();
-					
-						// Save public key in users table
-						$update = $conn->prepare("UPDATE users SET public_key = ? WHERE user_id = ?");
-						$update->bind_param("si", $keys['publicKey'], $userId);
-						$update->execute();
-						$update->close();
-					
-						// Save private key in user_private_keys table
-						$insertKey = $conn->prepare("INSERT INTO user_private_keys (user_id, private_key) VALUES (?, ?)");
-						$insertKey->bind_param("is", $userId, $keys['privateKey']);
-						$insertKey->execute();
-						$insertKey->close();
-
 						$_SESSION['loggedin'] = true;
 						$_SESSION['user_id'] = $conn->insert_id; // Get the new user's ID
 						$_SESSION['username'] = $username;
