@@ -1,88 +1,74 @@
 <?php
 session_start();
 
-// Check if the private key file is uploaded and POST request is made
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES['privateKeyFile'])) {
-    // URL to your Flask application that handles signing
-    $flaskSignUrl = 'http://127.0.0.1:5002/sign';
+function calculateTotalAmount($orderDetails) {
+    $orderDetailsArray = json_decode($orderDetails, true);
+    $totalAmount = 0;
+    foreach ($orderDetailsArray as $item) {
+        $totalAmount += $item['quantity'] * $item['price'];
+    }
+    return $totalAmount;
+}
 
-    // URL to your Flask application that adds the transaction to the blockchain
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES['privateKeyFile'])) {
+    $flaskSignUrl = 'http://127.0.0.1:5002/sign';
     $flaskAddTransactionUrl = 'http://127.0.0.1:5002/create_transaction';
 
-    // Retrieve order details and public key from the session
     $orderDetails = $_SESSION['orderDetails'] ?? '';
     $publicKey = $_SESSION['publicKey'] ?? '';
 
-    // Ensure that the data being sent is correct
-    echo "Order Details: " . $orderDetails;
-    echo "Public Key: " . $publicKey;
-    echo "Signature: " . $receivedSignature; // This should be the signature received from the signing process
-
-    // Process the uploaded private key file
     if ($_FILES['privateKeyFile']['error'] === UPLOAD_ERR_OK) {
         $filePath = $_FILES['privateKeyFile']['tmp_name'];
         $cFile = curl_file_create($filePath);
 
-        // Prepare data to be sent to the Flask sign endpoint
-        $data = [
+        $signData = [
             'orderDetails' => $orderDetails,
-            'publicKey' => $publicKey,
             'privateKeyFile' => $cFile
         ];
 
-        // Initialize cURL session for signing
         $ch = curl_init($flaskSignUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-
-        // Execute cURL request and capture the response for signing
-        $response = curl_exec($ch);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $signData);
+        $signResponse = curl_exec($ch);
+        $signData = json_decode($signResponse, true);
         curl_close($ch);
 
-        // Handle the response from the Flask sign endpoint
-        if ($response) {
-            $responseArray = json_decode($response, true);
+        echo $signData;
+        
+        if ($signData && $signData['success']) {
+            $blockchainData = json_encode([
+                'order_details' => $orderDetails,
+                'sender_public_key' => $publicKey,
+                'signature' => $signData['signature'],
+                'amount' => calculateTotalAmount($orderDetails),
+                'transaction_details' => $orderDetails 
+            ]);
 
-            if ($responseArray['success'] == true) {
-                // Prepare data to send to Flask for adding the transaction to the blockchain
-                $blockchainData = [
-                    'orderDetails' => $orderDetails,
-                    'publicKey' => $publicKey,
-                    'signature' => $responseArray['signature']
-                ];
+            $ch = curl_init($flaskAddTransactionUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $blockchainData);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            $blockchainResponse = curl_exec($ch);
+            $blockchainData = json_decode($blockchainResponse, true);
+            curl_close($ch);
 
-                // Initialize cURL session for adding transaction to the blockchain
-                $ch = curl_init($flaskAddTransactionUrl);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($blockchainData));
-                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
-
-                // Execute cURL request and capture the response for adding transaction
-                $blockchainResponse = curl_exec($ch);
-                curl_close($ch);
-
-                // Handle the response from adding transaction to blockchain
-                if ($blockchainResponse) {
-                    echo "Transaction added to blockchain successfully.";
-                } else {
-                    echo "Failed to add the transaction to the blockchain.";
-                }
+            if ($blockchainData && $blockchainData['status'] == 'success') {
+                echo "Transaction added to blockchain successfully.";
             } else {
-                echo "Failed to sign the transaction. Please try again.";
+                echo "Transaction failed: " . $blockchainData['message'];
             }
         } else {
-            echo "Error in signing the transaction.";
+            echo "Failed to sign the transaction. Error: " . ($signData['message'] ?? 'Unknown error');
         }
     } else {
-        echo "Error in uploading the file.";
+        echo "Error in uploading the private key file.";
     }
 } else {
     echo "No private key file received. Please try again.";
 }
 
-// Destroy the session to clear stored order details and public key
 session_destroy();
 ?>
 

@@ -2,8 +2,8 @@
 session_start();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Save the order details and public key in the session
-    $_SESSION['orderDetails'] = $_POST['orderDetails'];
+    // Decode the base64-encoded order details and save them in the session
+    $_SESSION['orderDetails'] = base64_decode($_POST['orderDetails']);
     $_SESSION['publicKey'] = $_POST['publicKey'];
 
     // Display a form for uploading the private key
@@ -16,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo "<button type='submit' class='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>Sign and Complete Payment</button>";
     echo "</form>";
 } else {
-    // Redirect back to cart if this page is accessed without submitting the cart form
+    // Redirect back to the cart if this page is accessed without submitting the cart form
     header('Location: cart.php');
     exit();
 }

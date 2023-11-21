@@ -46,22 +46,28 @@ function displayCart($conn) {
 
             $subtotal = $details['quantity'] * $details['price'];
             $totalPrice += $subtotal;
-            $orderDetails[$productId] = ['name' => $productName, 'quantity' => $details['quantity'], 'price' => $details['price']];
-
+            $blockchainOrderDetails = [];
+            foreach ($_SESSION['cart'] as $productId => $details) {
+                $blockchainOrderDetails[] = [
+                    'product_id' => $productId,
+                    'quantity' => $details['quantity'],
+                    'price' => $details['price']
+                ];
+            }
             echo "<li class='flex justify-between items-center my-2'>";
             echo "<strong class='flex-1'>" . htmlspecialchars($productName) . "</strong> ";
             echo "<input type='number' name='quantities[$productId]' value='" . $details['quantity'] . "' min='0' class='mx-2 p-2 border rounded' onchange='updateCart()'> ";
             echo "<span class='flex-1'>@ $" . htmlspecialchars($details['price']) . " each</span> ";
             echo "<span class='flex-1'>Subtotal: $" . number_format($subtotal, 2) . "</span>";
             echo "</li>";
-
         }
         echo "</ul>";
         echo "</form>"; // Closing the update cart form
 
         echo "<div class='text-lg font-bold my-4'>Total Price: $" . number_format($totalPrice, 2) . "</div>";
         echo "<form action='payment.php' method='post'>";
-        echo "<input type='hidden' name='orderDetails' value='" . htmlspecialchars(json_encode($orderDetails)) . "'>";
+        // Send the details as a base64 encoded JSON string
+        echo "<input type='hidden' name='orderDetails' value='" . base64_encode(json_encode($blockchainOrderDetails)) . "'>";
         echo "<label for='publicKey'>Enter Your Public Key:</label><br>";
         echo "<input type='text' id='publicKey' name='publicKey' required class='p-2 border rounded'><br><br>";
         echo "<button type='submit' class='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>Proceed to Payment</button>";

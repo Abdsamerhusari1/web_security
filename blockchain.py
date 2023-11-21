@@ -44,25 +44,22 @@ class Blockchain(object):
         self.chain.append(block)
         return block
 
-    def new_transaction(self, sender, recipient, amount, signature, public_key):
-        # Adds a new transaction to the list of transactions
-        # Creates a new transaction to go into the next mined Block
+    def new_transaction(self, sender, recipient, amount, signature, transaction_details):
         """
-        Creates a new transaction to go into the next mined Block
-        :param sender: <str> Address of the Sender
-        :param recipient: <str> Address of the Recipient
-        :param amount: <int> Amount
+        Adds a new transaction to the list of transactions
+        :param sender: <str> Public Key of the Sender
+        :param recipient: <str> Public Key of the Recipient
+        :param amount: <float> Amount
+        :param signature: <str> Signature of the transaction
+        :param transaction_details: <str> JSON string containing details of the transaction
         :return: <int> The index of the Block that will hold this transaction
         """
-
-
-        # included the signature and the public_key
         self.current_transactions.append({
             'sender': sender,
             'recipient': recipient,
             'amount': amount,
             'signature': signature,
-            'public_key': public_key
+            'details': transaction_details  
         })
         return self.last_block['index'] + 1
 
@@ -183,30 +180,22 @@ class Blockchain(object):
 
         return False
 
-def load_public_key(file_path):
-    """Load the public key from a PEM file."""
+# Load or define your store's public key
+def load_store_public_key(file_path):
     with open(file_path, 'r') as file:
-        key = RSA.import_key(file.read())
-    return key
-
-# Path to the store's public key PEM file
+        return RSA.import_key(file.read())
 store_public_key_path = 'store_public_key.pem'
-# Store's public key
-store_public_key = load_public_key(store_public_key_path)
+store_public_key = load_store_public_key(store_public_key_path)
 
-def validate_signature(public_key, signature_hex, message):
+def verify_signature(public_key_str, signature_hex, order_details_json):
     try:
-        # Load public key
-        public_key = RSA.import_key(public_key)
-
-        # Create a new hash of the message
-        h = SHA256.new(message.encode())
-
-        # Verify the signature
+        public_key = RSA.import_key(public_key_str)
+        order_hash = SHA256.new(order_details_json.encode())
         signature = bytes.fromhex(signature_hex)
-        pkcs1_15.new(public_key).verify(h, signature)
+        pkcs1_15.new(public_key).verify(order_hash, signature)
         return True
-    except (ValueError, TypeError, Exception):
+    except Exception as e:
+        print("Verification Failed: " + str(e))
         return False
 
 
@@ -285,43 +274,52 @@ def mine():
   
 @app.route('/create_transaction', methods=['POST'])
 def create_transaction():
-    values = request.get_json()
-
-    # Extract the required information from the request
-    sender_public_key_str = values.get('sender_public_key')
-    signature_hex = values.get('signature')
-    order_details = values.get('order_details')
-
-    # Convert the public key from string to RSA key
-    sender_public_key = RSA.import_key(sender_public_key_str)
-
-    # Create a new hash of the order details
-    h = SHA256.new(order_details.encode())
-
-    # Verify the signature
     try:
-        sender_public_key = RSA.import_key(sender_public_key_str)
-        h = SHA256.new(order_details.encode())
-        signature = bytes.fromhex(signature_hex)
-        pkcs1_15.new(sender_public_key).verify(h, signature)
-        print("Signature verification: SUCCESS")
+        values = request.get_json()
+        print("Received transaction data:", values)
 
+        sender_public_key_str = values.get('sender_public_key')
+        print("sender_public_key_str:", sender_public_key_str)
 
-        # If signature is valid, add the transaction
+        signature_hex = values.get('signature')
+        print("signature_hex:", signature_hex)
+
+        order_details = values.get('order_details')
+        print("order_details:", order_details)
+
+        amount = values.get('amount')
+        print("amount:", amount)
+
+        transaction_details = values.get('transaction_details')  # Additional transaction details
+        print("transaction_details:", transaction_details)
+
+        if not all([sender_public_key_str, signature_hex, order_details, amount]):
+            print("Missing required transaction fields")
+            return jsonify({'message': 'Missing required transaction fields', 'status': 'failed'}), 400
+
+        try:
+            sender_public_key = RSA.import_key(sender_public_key_str)
+            h = SHA256.new(order_details.encode())
+            signature = bytes.fromhex(signature_hex)
+            pkcs1_15.new(sender_public_key).verify(h, signature)
+            print("Signature verification: SUCCESS")
+        except (ValueError, TypeError):
+            print("Signature verification: FAILED")
+            return jsonify({'message': 'Invalid signature', 'status': 'failed'}), 400
+
         index = blockchain.new_transaction(
             sender=sender_public_key_str,
-            recipient=store_public_key.export_key().decode(),
-            amount=values['amount'],
-            signature=signature_hex
+            recipient=store_public_key.export_key().decode(),  # Convert store's public key to string
+            amount=float(amount),  
+            signature=signature_hex,
+            transaction_details=transaction_details
         )
+        print(f"Transaction will be added to Block {index}")
         return jsonify({'message': f'Transaction will be added to Block {index}', 'status': 'success'}), 200
-    except (ValueError, TypeError):
-        print("Signature verification: FAILED", str(e))
 
-        return jsonify({'message': 'Invalid signature', 'status': 'failed'}), 400
-
-
-
+    except Exception as e:
+        print("Error in create_transaction:", str(e))
+        return jsonify({'message': f'Error processing transaction: {str(e)}', 'status': 'failed'}), 400
 
 
 
@@ -341,25 +339,28 @@ def home():
 
 @app.route('/sign', methods=['POST'])
 def sign_transaction():
-    # Check for the private key file in the request
-    if 'privateKeyFile' in request.files:
-        order_details = request.form['orderDetails']
-        file = request.files['privateKeyFile']
-        private_key_pem = file.read()
-        private_key = RSA.import_key(private_key_pem)
-        h = SHA256.new(order_details.encode())
-        signature = pkcs1_15.new(private_key).sign(h)
-        signature_hex = signature.hex()
-
-        # Instead of redirecting, return a success message with the signature
-        return jsonify({
-            'success': True,
-            'signature': signature_hex,
-            'orderDetails': order_details
-        })
-    else:
-        # If no private key file, return an error message
+    if 'privateKeyFile' not in request.files:
         return jsonify({'success': False, 'message': 'Private key file is missing'}), 400
+
+    private_key_file = request.files['privateKeyFile']
+    order_details = request.form.get('orderDetails')
+
+    # Assuming order_details is a string of JSON data
+    h = SHA256.new(order_details.encode())
+    private_key = RSA.import_key(private_key_file.read())
+    signature = pkcs1_15.new(private_key).sign(h)
+    print("siiiiiiiiiiiiiiiggggnnnnnnn")
+    print(signature.hex())
+    print("                                                      ")
+    print(order_details)
+    print("                                                      ")
+
+    return jsonify({
+        'success': True,
+        'signature': signature.hex(),
+        'orderDetails': order_details
+    })
+
 
 
 
