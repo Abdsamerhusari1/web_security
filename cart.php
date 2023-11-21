@@ -31,6 +31,7 @@ function displayCart($conn) {
 
     if (!empty($_SESSION['cart'])) {
         echo "<h2 class='text-2xl font-bold my-4'>Your Shopping Cart</h2>";
+        echo "<form id='update-cart-form' method='post'>";
         echo "<ul class='list-none'>";
         
         foreach ($_SESSION['cart'] as $productId => $details) {
@@ -45,7 +46,7 @@ function displayCart($conn) {
 
             $subtotal = $details['quantity'] * $details['price'];
             $totalPrice += $subtotal;
-            $orderDetails[$productId] = ['name' => $productName, 'quantity' => $details['quantity'], 'price' => $details['price'], 'subtotal' => $subtotal];
+            $orderDetails[$productId] = ['name' => $productName, 'quantity' => $details['quantity'], 'price' => $details['price']];
 
             echo "<li class='flex justify-between items-center my-2'>";
             echo "<strong class='flex-1'>" . htmlspecialchars($productName) . "</strong> ";
@@ -53,25 +54,23 @@ function displayCart($conn) {
             echo "<span class='flex-1'>@ $" . htmlspecialchars($details['price']) . " each</span> ";
             echo "<span class='flex-1'>Subtotal: $" . number_format($subtotal, 2) . "</span>";
             echo "</li>";
-        }
 
+        }
         echo "</ul>";
-        echo "<div class='text-lg font-bold my-4'>Total Price: $" . number_format($totalPrice, 2) . "</div>";
+        echo "</form>"; // Closing the update cart form
 
-        if (!empty($_SESSION['cart'])) {
-            $orderDetailsJson = json_encode($orderDetails);
-            $flaskAppUrl = "http://127.0.0.1:5000/sign"; // URL of your Flask app
-            echo "<form action='" . $flaskAppUrl . "' method='post'>";
-            echo "<input type='hidden' name='orderDetails' value='" . htmlspecialchars($orderDetailsJson) . "'>";
-            echo "<button type='submit' class='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>";
-            echo "Proceed to Sign Transaction";
-            echo "</button>";
-            echo "</form>";
-        }
+        echo "<div class='text-lg font-bold my-4'>Total Price: $" . number_format($totalPrice, 2) . "</div>";
+        echo "<form action='payment.php' method='post'>";
+        echo "<input type='hidden' name='orderDetails' value='" . htmlspecialchars(json_encode($orderDetails)) . "'>";
+        echo "<label for='publicKey'>Enter Your Public Key:</label><br>";
+        echo "<input type='text' id='publicKey' name='publicKey' required class='p-2 border rounded'><br><br>";
+        echo "<button type='submit' class='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>Proceed to Payment</button>";
+        echo "</form>";
     } else {
         echo "<p class='text-red-500 text-center'>Your cart is empty.</p>";
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -104,7 +103,9 @@ function displayCart($conn) {
 
     <div class="flex-grow container mx-auto px-4 py-8">
         <div class="max-w-lg mx-auto">
-            <?php displayCart($conn); ?>
+            <form id='cart-form' method='post'>
+                <?php displayCart($conn); ?>
+            </form>
         </div>
     </div>
 

@@ -2,7 +2,10 @@ import hashlib
 import json
 from time import time
 from uuid import uuid4
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, redirect, render_template_string, url_for
+from Crypto.PublicKey import RSA
+from Crypto.Signature import pkcs1_15
+from Crypto.Hash import SHA256
 from textwrap import dedent
 from urllib.parse import urlparse
 import requests
@@ -180,6 +183,33 @@ class Blockchain(object):
 
         return False
 
+def load_public_key(file_path):
+    """Load the public key from a PEM file."""
+    with open(file_path, 'r') as file:
+        key = RSA.import_key(file.read())
+    return key
+
+# Path to the store's public key PEM file
+store_public_key_path = 'store_public_key.pem'
+# Store's public key
+store_public_key = load_public_key(store_public_key_path)
+
+def validate_signature(public_key, signature_hex, message):
+    try:
+        # Load public key
+        public_key = RSA.import_key(public_key)
+
+        # Create a new hash of the message
+        h = SHA256.new(message.encode())
+
+        # Verify the signature
+        signature = bytes.fromhex(signature_hex)
+        pkcs1_15.new(public_key).verify(h, signature)
+        return True
+    except (ValueError, TypeError, Exception):
+        return False
+
+
 
 # Instantiate our Node
 app = Flask(__name__)
@@ -253,20 +283,45 @@ def mine():
     }
     return jsonify(response), 200
   
-@app.route('/transactions/new', methods=['POST'])
-def new_transaction():
+@app.route('/create_transaction', methods=['POST'])
+def create_transaction():
     values = request.get_json()
 
-    # Check that required fields are in the POST'ed data
-    required = ['sender', 'recipient', 'amount', 'signature', 'public_key']
-    if not all(k in values for k in required):
-        return 'Missing values', 400
+    # Extract the required information from the request
+    sender_public_key_str = values.get('sender_public_key')
+    signature_hex = values.get('signature')
+    order_details = values.get('order_details')
 
-    # Create a new Transaction
-    index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'], values['signature'], values['public_key'])
+    # Convert the public key from string to RSA key
+    sender_public_key = RSA.import_key(sender_public_key_str)
 
-    response = {'message': f'Transaction will be added to Block {index}'}
-    return jsonify(response), 201
+    # Create a new hash of the order details
+    h = SHA256.new(order_details.encode())
+
+    # Verify the signature
+    try:
+        sender_public_key = RSA.import_key(sender_public_key_str)
+        h = SHA256.new(order_details.encode())
+        signature = bytes.fromhex(signature_hex)
+        pkcs1_15.new(sender_public_key).verify(h, signature)
+        print("Signature verification: SUCCESS")
+
+
+        # If signature is valid, add the transaction
+        index = blockchain.new_transaction(
+            sender=sender_public_key_str,
+            recipient=store_public_key.export_key().decode(),
+            amount=values['amount'],
+            signature=signature_hex
+        )
+        return jsonify({'message': f'Transaction will be added to Block {index}', 'status': 'success'}), 200
+    except (ValueError, TypeError):
+        print("Signature verification: FAILED", str(e))
+
+        return jsonify({'message': 'Invalid signature', 'status': 'failed'}), 400
+
+
+
 
 
 
@@ -282,6 +337,31 @@ def full_chain():
 @app.route('/')
 def home():
     return "Hello, Blockchain!"
+
+
+@app.route('/sign', methods=['POST'])
+def sign_transaction():
+    # Check for the private key file in the request
+    if 'privateKeyFile' in request.files:
+        order_details = request.form['orderDetails']
+        file = request.files['privateKeyFile']
+        private_key_pem = file.read()
+        private_key = RSA.import_key(private_key_pem)
+        h = SHA256.new(order_details.encode())
+        signature = pkcs1_15.new(private_key).sign(h)
+        signature_hex = signature.hex()
+
+        # Instead of redirecting, return a success message with the signature
+        return jsonify({
+            'success': True,
+            'signature': signature_hex,
+            'orderDetails': order_details
+        })
+    else:
+        # If no private key file, return an error message
+        return jsonify({'success': False, 'message': 'Private key file is missing'}), 400
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5002)
