@@ -13,10 +13,10 @@ public_key = private_key.publickey()
 pem_public_key = public_key.export_key()
 
 # Write the keys to files
-with open('store_private_key.pem', 'wb') as f:
+with open('private_key.pem', 'wb') as f:
     f.write(pem_private_key)
 
-with open('store_public_key.pem', 'wb') as f:
+with open('public_key.pem', 'wb') as f:
     f.write(pem_public_key)
 
 print("Keys generated and saved to files.")

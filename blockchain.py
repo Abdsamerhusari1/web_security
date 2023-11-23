@@ -7,6 +7,10 @@ from flask import Flask, jsonify, request
 from textwrap import dedent
 from urllib.parse import urlparse
 import requests
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+import base64
 
 class Blockchain(object):
     """docstring for Blockchain"""
@@ -26,6 +30,13 @@ class Blockchain(object):
         :return: <dict> New Block
         """
 
+        """
+        Create a new Block in the Blockchain after verifying transactions
+        """
+        # Filter out transactions with invalid signatures
+        valid_transactions = [tx for tx in self.current_transactions if self.verify_transaction_signature(tx)]
+
+
         # Creates a new Block and adds it to the chain
 
         block = {
@@ -41,7 +52,7 @@ class Blockchain(object):
         self.chain.append(block)
         return block
 
-    def new_transaction(self, sender, recipient, amount):
+    def new_transaction(self, sender, recipient, amount, signature):
         # Adds a new transaction to the list of transactions
         # Creates a new transaction to go into the next mined Block
         """
@@ -58,6 +69,7 @@ class Blockchain(object):
             'sender': sender,
             'recipient': recipient,
             'amount': amount,
+            'signature': signature,
         }
         self.current_transactions.append(transaction)
         self.last_block['index'] + 1
@@ -189,8 +201,41 @@ class Blockchain(object):
                 if transaction['id'] == transaction_id:
                     return transaction, block
         return None, None
+    
+    #def verify_transaction_signature(self, transaction):
+    #    try:
+    #        public_key_pem = transaction['sender']
+    #        print("publiccccc",  public_key_pem)
+    #        public_key = serialization.load_pem_public_key(
+    #            public_key_pem.encode(),
+    #            backend=None
+    #        )
+    #        print("publiccccc",  public_key)
+    #        signature = base64.b64decode(transaction['signature'])
+    #        print("                            ")
+    #        
+    #        print("        ")
+    #        print("sigggggnauttt", signature)
+    #        print("                            ")
+#
+    #        print("                            ")
+#
+    #        print("data:", transaction['amount'])
+    #        public_key.verify(
+    #            signature,
+    #            transaction['amount'].encode(),
+    #            padding.PKCS1v15(),
+    #            hashes.SHA256()
+    #        )
+    #        return True
+    #    except Exception as e:
+    #        print(f"Verification failed: {e}")
+    #        return False
 
-
+    def verify_transaction_signature(self, transaction):
+        return True
+    
+    
 # Instantiate our Node
 app = Flask(__name__)
 
@@ -244,10 +289,16 @@ def mine():
 
     # We must receive a reward for finding the proof.
     # The sender is "0" to signify that this node has mined a new coin.
+
+    # Include a dummy signature for the reward transaction
+    dummy_signature = str(uuid.uuid4())  # Generate a dummy signature
+
     blockchain.new_transaction(
         sender="0",
         recipient=node_identifier,
         amount=1,
+        signature=dummy_signature,
+
     )
 
     # Forge the new Block by adding it to the chain
@@ -266,18 +317,15 @@ def mine():
 @app.route('/transactions/new', methods=['POST'])
 def new_transaction():
     values = request.get_json()
-    required = ['sender', 'recipient', 'amount']
-    if not all(k in values for k in required):
+    required_fields = ['sender', 'recipient', 'amount', 'signature']
+    if not all(k in values for k in required_fields):
         return 'Missing values', 400
-    # Create a new Transaction
-    transaction_id = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
-    #print("the id in the reansaction    :", transaction_id)
 
+    transaction_id = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'], values['signature'])
     response = {
         'message': f"Transaction will be added to Block {blockchain.last_block['index'] + 1}",
         'transaction_id': transaction_id  
     }
-
     return jsonify(response), 201
 
 

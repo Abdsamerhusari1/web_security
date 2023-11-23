@@ -2,6 +2,7 @@
 session_start();
 require_once('backend/db_connect.php'); // Ensure this path is correct
 
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['orderDetails'])) {
     // Decode the order details
     $orderDetails = json_decode(base64_decode($_POST['orderDetails']), true);
@@ -29,12 +30,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['orderDetails'])) {
             <?php if(isset($orderDetails)): ?>
                 <h2 class="text-2xl font-bold my-4">Checkout</h2>
                 <p>Total Amount: $<?= number_format($totalAmount, 2) ?></p>
-                <form action="process_payment.php" method="post">
+                <form action="process_payment.php" method="post" enctype="multipart/form-data">
                     <input type='hidden' name='orderDetails' value='<?= base64_encode(json_encode($orderDetails)) ?>'>
-                    <label for="publicKey">Your Public Key:</label><br>
-                    <input type="text" id="publicKey" name="publicKey" required class="p-2 border rounded"><br><br>
-                    <label for="privateKey">Your Private Key:</label><br>
-                    <input type="password" id="privateKey" name="privateKey" required class="p-2 border rounded"><br><br>
+                    <label for="publicKeyFile">Your Public Key (.pem file):</label><br>
+                    <input type="file" id="publicKeyFile" name="publicKeyFile" required class="p-2 border rounded"><br><br>
+                    <label for="privateKeyFile">Your Private Key (.pem file):</label><br>
+                    <input type="file" id="privateKeyFile" name="privateKeyFile" required class="p-2 border rounded"><br><br>
                     <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Make Payment</button>
                 </form>
             <?php else: ?>
