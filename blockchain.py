@@ -2,10 +2,8 @@ import hashlib
 import json
 from time import time
 from uuid import uuid4
-from flask import Flask, jsonify, request, redirect, render_template_string, url_for
-from Crypto.PublicKey import RSA
-from Crypto.Signature import pkcs1_15
-from Crypto.Hash import SHA256
+import uuid
+from flask import Flask, jsonify, request
 from textwrap import dedent
 from urllib.parse import urlparse
 import requests
@@ -18,7 +16,6 @@ class Blockchain(object):
 
         # Create the genesis block
         self.new_block(previous_hash=1, proof=100)
-
         self.nodes = set()
         
     def new_block(self, proof, previous_hash=None):
@@ -44,24 +41,27 @@ class Blockchain(object):
         self.chain.append(block)
         return block
 
-    def new_transaction(self, sender, recipient, amount, signature, transaction_details):
+    def new_transaction(self, sender, recipient, amount):
+        # Adds a new transaction to the list of transactions
+        # Creates a new transaction to go into the next mined Block
         """
-        Adds a new transaction to the list of transactions
-        :param sender: <str> Public Key of the Sender
-        :param recipient: <str> Public Key of the Recipient
-        :param amount: <float> Amount
-        :param signature: <str> Signature of the transaction
-        :param transaction_details: <str> JSON string containing details of the transaction
+        Creates a new transaction to go into the next mined Block
+        :param id: <str> Unique identifier for the transaction
+        :param sender: <str> Address of the Sender
+        :param recipient: <str> Address of the Recipient
+        :param amount: <int> Amount
         :return: <int> The index of the Block that will hold this transaction
         """
-        self.current_transactions.append({
+
+        transaction = {
+            'id': str(uuid.uuid4()),  
             'sender': sender,
             'recipient': recipient,
             'amount': amount,
-            'signature': signature,
-            'details': transaction_details  
-        })
-        return self.last_block['index'] + 1
+        }
+        self.current_transactions.append(transaction)
+        self.last_block['index'] + 1
+        return transaction['id']
 
     @staticmethod
     def hash(block):
@@ -180,24 +180,15 @@ class Blockchain(object):
 
         return False
 
-# Load or define your store's public key
-def load_store_public_key(file_path):
-    with open(file_path, 'r') as file:
-        return RSA.import_key(file.read())
-store_public_key_path = 'store_public_key.pem'
-store_public_key = load_store_public_key(store_public_key_path)
 
-def verify_signature(public_key_str, signature_hex, order_details_json):
-    try:
-        public_key = RSA.import_key(public_key_str)
-        order_hash = SHA256.new(order_details_json.encode())
-        signature = bytes.fromhex(signature_hex)
-        pkcs1_15.new(public_key).verify(order_hash, signature)
-        return True
-    except Exception as e:
-        print("Verification Failed: " + str(e))
-        return False
-
+    def find_transaction_by_id(self, transaction_id):
+        # Iterate through all current_transactions to find the one with the given ID
+        for block in self.chain:
+            #print("the blocks                                               :" , block['transactions'])
+            for transaction in block['transactions']:
+                if transaction['id'] == transaction_id:
+                    return transaction, block
+        return None, None
 
 
 # Instantiate our Node
@@ -272,55 +263,22 @@ def mine():
     }
     return jsonify(response), 200
   
-@app.route('/create_transaction', methods=['POST'])
-def create_transaction():
-    try:
-        values = request.get_json()
-        print("Received transaction data:", values)
+@app.route('/transactions/new', methods=['POST'])
+def new_transaction():
+    values = request.get_json()
+    required = ['sender', 'recipient', 'amount']
+    if not all(k in values for k in required):
+        return 'Missing values', 400
+    # Create a new Transaction
+    transaction_id = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
+    #print("the id in the reansaction    :", transaction_id)
 
-        sender_public_key_str = values.get('sender_public_key')
-        print("sender_public_key_str:", sender_public_key_str)
+    response = {
+        'message': f"Transaction will be added to Block {blockchain.last_block['index'] + 1}",
+        'transaction_id': transaction_id  
+    }
 
-        signature_hex = values.get('signature')
-        print("signature_hex:", signature_hex)
-
-        order_details = values.get('order_details')
-        print("order_details:", order_details)
-
-        amount = values.get('amount')
-        print("amount:", amount)
-
-        transaction_details = values.get('transaction_details')  # Additional transaction details
-        print("transaction_details:", transaction_details)
-
-        if not all([sender_public_key_str, signature_hex, order_details, amount]):
-            print("Missing required transaction fields")
-            return jsonify({'message': 'Missing required transaction fields', 'status': 'failed'}), 400
-
-        try:
-            sender_public_key = RSA.import_key(sender_public_key_str)
-            h = SHA256.new(order_details.encode())
-            signature = bytes.fromhex(signature_hex)
-            pkcs1_15.new(sender_public_key).verify(h, signature)
-            print("Signature verification: SUCCESS")
-        except (ValueError, TypeError):
-            print("Signature verification: FAILED")
-            return jsonify({'message': 'Invalid signature', 'status': 'failed'}), 400
-
-        index = blockchain.new_transaction(
-            sender=sender_public_key_str,
-            recipient=store_public_key.export_key().decode(),  # Convert store's public key to string
-            amount=float(amount),  
-            signature=signature_hex,
-            transaction_details=transaction_details
-        )
-        print(f"Transaction will be added to Block {index}")
-        return jsonify({'message': f'Transaction will be added to Block {index}', 'status': 'success'}), 200
-
-    except Exception as e:
-        print("Error in create_transaction:", str(e))
-        return jsonify({'message': f'Error processing transaction: {str(e)}', 'status': 'failed'}), 400
-
+    return jsonify(response), 201
 
 
 @app.route('/chain', methods=['GET'])
@@ -331,38 +289,20 @@ def full_chain():
     }
     return jsonify(response), 200
 
-
-@app.route('/')
-def home():
-    return "Hello, Blockchain!"
-
-
-@app.route('/sign', methods=['POST'])
-def sign_transaction():
-    if 'privateKeyFile' not in request.files:
-        return jsonify({'success': False, 'message': 'Private key file is missing'}), 400
-
-    private_key_file = request.files['privateKeyFile']
-    order_details = request.form.get('orderDetails')
-
-    # Assuming order_details is a string of JSON data
-    h = SHA256.new(order_details.encode())
-    private_key = RSA.import_key(private_key_file.read())
-    signature = pkcs1_15.new(private_key).sign(h)
-    print("siiiiiiiiiiiiiiiggggnnnnnnn")
-    print(signature.hex())
-    print("                                                      ")
-    print(order_details)
-    print("                                                      ")
-
-    return jsonify({
-        'success': True,
-        'signature': signature.hex(),
-        'orderDetails': order_details
-    })
-
-
-
+@app.route('/transaction/validate/<transaction_id>', methods=['GET'])
+def validate_transaction(transaction_id):
+    #print("the id                        :" , transaction_id)
+    transaction, block = blockchain.find_transaction_by_id(transaction_id)
+    #print(blockchain.find_transaction_by_id(transaction_id))
+    if transaction:
+        return jsonify({'valid': True, 'block': block, 'transaction': transaction}), 200
+    else:
+        return jsonify({'valid': False, 'message': 'Transaction not found'}), 404
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5002)
+
+#if __name__ == "__main__":
+#    context = ('cert.pem', 'key.pem')  
+#    app.run(host='0.0.0.0', port=5002, ssl_context=context)
+    
