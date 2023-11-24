@@ -235,7 +235,6 @@ class Blockchain(object):
     def verify_transaction_signature(self, transaction):
         return True
     
-    
 # Instantiate our Node
 app = Flask(__name__)
 

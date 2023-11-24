@@ -31,13 +31,20 @@ def send_transaction(sender_public_key, recipient, amount, signature):
     response = requests.post(url, headers=headers, data=json.dumps(payload))
     return response.json()
 
-# Main function to run the program
+def read_pem_file(file_path):
+    with open(file_path, 'r') as file:
+        return file.read()
+    
 def main():
-    sender_public_key = input("Enter your public key: ")
-    private_key_pem = input("Enter your private key: ")
-    recipient = input("Enter recipient's address (webshop's wallet address): ")
+    sender_public_key_path = input("Enter your public key file path: ")
+    private_key_pem_path = input("Enter your private key file path: ")
+    recipient_path = input("Enter recipient's address file path: ")
     amount = float(input("Enter the amount to send: "))
 
+    sender_public_key = read_pem_file(sender_public_key_path)
+    private_key_pem = read_pem_file(private_key_pem_path)
+    recipient = read_pem_file(recipient_path)
+    
     transaction_data = json.dumps({"sender": sender_public_key, "recipient": recipient, "amount": amount})
     signature = sign_data(transaction_data, private_key_pem)
 

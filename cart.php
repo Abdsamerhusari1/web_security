@@ -91,6 +91,7 @@ function displayCart($conn) {
                 <a href="cart.php" class="px-3 hover:text-gray-300">Cart</a>
                 
                 <?php if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true): ?>
+                    <a href="orders.php" class="px-3 hover:text-gray-300">My Orders</a> <!-- Add My Orders link -->
                     <a href="logout.php" class="px-3 hover:text-gray-300">Logout</a>
                 <?php else: ?>
                     <a href="login.php" class="px-3 hover:text-gray-300">Login</a>
