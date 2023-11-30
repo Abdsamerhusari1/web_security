@@ -59,6 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['orderDetails'])) {
     $_SESSION['orderDetails'] = $productDetails;
     $_SESSION['totalAmount'] = $totalAmount;
 }
+$hashedPublicKey = 'a5da4d31a0a674f3ad9cdd3c83fc78176381e1769a3212718cc6a3ff800e03f9'; 
 ?>
 
 <!DOCTYPE html>
@@ -99,6 +100,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['orderDetails'])) {
                     <?php endforeach; ?>
                 </div>
                 <p class="font-bold mt-4">Total Amount: $<?= number_format($totalAmount, 2) ?></p>
+
+                <p class="font-bold mt-4">Hashed Public Key: <span id="hashedKey"><?php echo $hashedPublicKey; ?></span></p>
+                <button onclick="copyHashedKey()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4">Copy Hashed Key</button>
+
                 <form action="payment_confirmation.php" method="post">
                     <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4">Pay</button>
                 </form>
@@ -112,5 +117,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['orderDetails'])) {
         © 2023 Group 2 Shop
     </footer>
     <?php $conn->close(); ?>
+    <script>
+        function copyHashedKey() {
+            var copyText = document.getElementById("hashedKey");
+            navigator.clipboard.writeText(copyText.textContent);
+            alert("Hashed key copied: " + copyText.textContent);
+        }
+    </script>
 </body>
 </html>

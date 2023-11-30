@@ -10,7 +10,11 @@ import requests
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+
 import base64
+
+counter = 0
 
 class Blockchain(object):
     """docstring for Blockchain"""
@@ -34,10 +38,8 @@ class Blockchain(object):
         Create a new Block in the Blockchain after verifying transactions
         """
         # Filter out transactions with invalid signatures
-        valid_transactions = [tx for tx in self.current_transactions if self.verify_transaction_signature(tx)]
-
-
-        # Creates a new Block and adds it to the chain
+        #valid_transactions = [tx for tx in self.current_transactions if self.verify_transaction_signature(tx)]
+        #self.current_transactions = valid_transactions
 
         block = {
             'index': len(self.chain) + 1,
@@ -52,7 +54,7 @@ class Blockchain(object):
         self.chain.append(block)
         return block
 
-    def new_transaction(self, sender, recipient, amount, signature):
+    def new_transaction(self, sender, recipient, amount, signature=None):
         # Adds a new transaction to the list of transactions
         # Creates a new transaction to go into the next mined Block
         """
@@ -71,9 +73,16 @@ class Blockchain(object):
             'amount': amount,
             'signature': signature,
         }
-        self.current_transactions.append(transaction)
-        self.last_block['index'] + 1
-        return transaction['id']
+
+        # Verify the transaction signature
+        if sender == "0" or self.verify_transaction_signature(transaction):
+            # If the signature is valid, add the transaction to the list
+            self.current_transactions.append(transaction)
+            return self.last_block['index'] + 1
+        else:
+            # If the signature is invalid, do not add the transaction and return None
+            return None
+
 
     @staticmethod
     def hash(block):
@@ -193,48 +202,53 @@ class Blockchain(object):
         return False
 
 
-    def find_transaction_by_id(self, transaction_id):
-        # Iterate through all current_transactions to find the one with the given ID
-        for block in self.chain:
-            #print("the blocks                                               :" , block['transactions'])
-            for transaction in block['transactions']:
-                if transaction['id'] == transaction_id:
-                    return transaction, block
-        return None, None
-    
-    #def verify_transaction_signature(self, transaction):
-    #    try:
-    #        public_key_pem = transaction['sender']
-    #        print("publiccccc",  public_key_pem)
-    #        public_key = serialization.load_pem_public_key(
-    #            public_key_pem.encode(),
-    #            backend=None
-    #        )
-    #        print("publiccccc",  public_key)
-    #        signature = base64.b64decode(transaction['signature'])
-    #        print("                            ")
-    #        
-    #        print("        ")
-    #        print("sigggggnauttt", signature)
-    #        print("                            ")
-#
-    #        print("                            ")
-#
-    #        print("data:", transaction['amount'])
-    #        public_key.verify(
-    #            signature,
-    #            transaction['amount'].encode(),
-    #            padding.PKCS1v15(),
-    #            hashes.SHA256()
-    #        )
-    #        return True
-    #    except Exception as e:
-    #        print(f"Verification failed: {e}")
-    #        return False
 
     def verify_transaction_signature(self, transaction):
-        return True
+        global counter
+
+        if transaction['sender'] == "0":
+            # Handling reward transaction. No need for signature verification.
+            return True
+        sender_public_key_pem = transaction['sender']
+        #print("Debug: Public Key Before Verification:\n", sender_public_key_pem)  # Debugging line
+
+        signature = base64.b64decode(transaction['signature'])
+        transaction_data = json.dumps({
+            'sender': transaction['sender'],
+            'recipient': transaction['recipient'],
+            'amount': transaction['amount']
+        }, sort_keys=True).encode()
+
+        counter += 1
+
+        try:
+            public_key = serialization.load_pem_public_key(
+                sender_public_key_pem.encode(),
+                backend=default_backend()
+            )            
+            print("\n")
+            #print(f"This code has been reached {counter} times.")
+        except ValueError as e:
+            #print(f"This code has not been reached {counter} times.")
+
+            print(f"Error loading public key: {e}")
+            return False
+
+        try:
+            public_key.verify(
+                signature,
+                transaction_data,
+                padding.PKCS1v15(),
+                hashes.SHA256()
+            )
+            return True
+        except Exception as e:
+            print(f"Verification failed: {e}")
+            return False
+
     
+
+        
 # Instantiate our Node
 app = Flask(__name__)
 
@@ -288,16 +302,13 @@ def mine():
 
     # We must receive a reward for finding the proof.
     # The sender is "0" to signify that this node has mined a new coin.
-
     # Include a dummy signature for the reward transaction
     dummy_signature = str(uuid.uuid4())  # Generate a dummy signature
-
     blockchain.new_transaction(
         sender="0",
         recipient=node_identifier,
         amount=1,
         signature=dummy_signature,
-
     )
 
     # Forge the new Block by adding it to the chain
@@ -316,16 +327,16 @@ def mine():
 @app.route('/transactions/new', methods=['POST'])
 def new_transaction():
     values = request.get_json()
-    required_fields = ['sender', 'recipient', 'amount', 'signature']
-    if not all(k in values for k in required_fields):
+    required = ['sender', 'recipient', 'amount', 'signature']
+    if not all(k in values for k in required):
         return 'Missing values', 400
 
-    transaction_id = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'], values['signature'])
-    response = {
-        'message': f"Transaction will be added to Block {blockchain.last_block['index'] + 1}",
-        'transaction_id': transaction_id  
-    }
-    return jsonify(response), 201
+    index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'], values['signature'])
+    if index:
+        response = {'message': f'Transaction will be added to Block {index}'}
+        return jsonify(response), 201
+    else:
+        return jsonify({'message': 'Invalid transaction'}), 406
 
 
 @app.route('/chain', methods=['GET'])
@@ -335,16 +346,6 @@ def full_chain():
         'length': len(blockchain.chain),
     }
     return jsonify(response), 200
-
-@app.route('/transaction/validate/<transaction_id>', methods=['GET'])
-def validate_transaction(transaction_id):
-    #print("the id                        :" , transaction_id)
-    transaction, block = blockchain.find_transaction_by_id(transaction_id)
-    #print(blockchain.find_transaction_by_id(transaction_id))
-    if transaction:
-        return jsonify({'valid': True, 'block': block, 'transaction': transaction}), 200
-    else:
-        return jsonify({'valid': False, 'message': 'Transaction not found'}), 404
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5002)
