@@ -1,4 +1,20 @@
 <?php
+if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
+    $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    header("Location: $redirectURL");
+    exit;
+}
+?>
+
+<?php
+if (isset($error_message) && !empty($error_message)) {
+	echo '<p style="color: red;">' . $error_message . '</p>';
+}
+?>
+
+<title>Checkout</title>
+
+<?php
 session_start();
 require_once('backend/db_connect.php'); // Ensure this path is correct
 
@@ -49,7 +65,7 @@ function getProductDetails($conn, $orderDetails) {
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['orderDetails'])) {
 
-    
+
     $orderDetails = json_decode(base64_decode($_POST['orderDetails']), true);
     $productDetails = getProductDetails($conn, $orderDetails);
 
@@ -65,7 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 }
 
-$hashedPublicKey = 'a5da4d31a0a674f3ad9cdd3c83fc78176381e1769a3212718cc6a3ff800e03f9'; 
+$hashedPublicKey = 'a5da4d31a0a674f3ad9cdd3c83fc78176381e1769a3212718cc6a3ff800e03f9';
 
 
 ?>
@@ -84,7 +100,7 @@ $hashedPublicKey = 'a5da4d31a0a674f3ad9cdd3c83fc78176381e1769a3212718cc6a3ff800e
             <div>
                 <a href="index.php" class="px-3 hover:text-gray-300">Home</a>
                 <a href="cart.php" class="px-3 hover:text-gray-300">Cart</a>
-                
+
                 <?php if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true): ?>
                     <a href="logout.php" class="px-3 hover:text-gray-300">Logout</a>
                 <?php else: ?>
@@ -115,7 +131,7 @@ $hashedPublicKey = 'a5da4d31a0a674f3ad9cdd3c83fc78176381e1769a3212718cc6a3ff800e
                <form action="payment_confirmation.php" method="post">
                     <!-- Include order details as hidden input -->
                     <input type='hidden' name='orderDetails' value='<?= base64_encode(json_encode($orderDetails)) ?>'>
-                    
+
                     <!-- Field for Transaction ID -->
                     <label for="transactionId">Transaction ID:</label>
                     <input type="text" id="transactionId" name="transactionId" required class="p-2 border rounded mb-4">

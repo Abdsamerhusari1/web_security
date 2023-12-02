@@ -1,4 +1,12 @@
 <?php
+if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
+    $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    header("Location: $redirectURL");
+    exit;
+} 
+?>
+
+<?php
 if (isset($error_message) && !empty($error_message)) {
 	echo '<p style="color: red;">' . $error_message . '</p>';
 }

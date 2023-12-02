@@ -1,4 +1,20 @@
 <?php
+if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
+    $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    header("Location: $redirectURL");
+    exit;
+}
+?>
+
+<?php
+if (isset($error_message) && !empty($error_message)) {
+	echo '<p style="color: red;">' . $error_message . '</p>';
+}
+?>
+
+<title>Cart</title>
+
+<?php
 session_start();
 require_once('backend/db_connect.php');
 
@@ -89,7 +105,7 @@ function displayCart($conn) {
             <div>
                 <a href="index.php" class="px-3 hover:text-gray-300">Home</a>
                 <a href="cart.php" class="px-3 hover:text-gray-300">Cart</a>
-                
+
                 <?php if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true): ?>
                     <a href="orders.php" class="px-3 hover:text-gray-300">My Orders</a> <!-- Add My Orders link -->
                     <a href="logout.php" class="px-3 hover:text-gray-300">Logout</a>
