@@ -14,6 +14,14 @@ if (isset($error_message) && !empty($error_message)) {
 	
 <title>Login</title>
 <?php
+/*session_set_cookie_params([
+    'lifetime' => 1800, // match your session timeout
+    'path' => '/',
+    'domain' => '',
+    'secure' => true, // Send cookie only over HTTPS
+    'httponly' => true, // Prevent client-side access to the cookie
+    'samesite' => 'Strict', // prevents cookie from being sent by the browser with cross-site requests. Prevents CSRF-attacks
+]); */
 /*HTTPOnly Cookies: HTTPOnly cookies cannot be accessed through JavaScript,
 which makes them more resilient to XSS attacks. This is set using the httponly flag in the setcookie function
 setcookie("name", "value", ["httponly" => true]);
