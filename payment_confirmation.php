@@ -9,7 +9,7 @@ if (!isset($_SESSION['orderDetails']) || !isset($_SESSION['totalAmount'])) {
 
 $orderDetails = $_SESSION['orderDetails'];
 $totalAmount = $_SESSION['totalAmount'];
-$username = $_SESSION['username'] ?? 'User'; // Replace with the actual username
+$username = $_SESSION['username'] ?? 'User'; 
 ?>
 
 <!DOCTYPE html>
@@ -22,9 +22,8 @@ $username = $_SESSION['username'] ?? 'User'; // Replace with the actual username
     <!-- Include Animate.css for animations -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
-        /* Add CSS styles here */
         body {
-            background: linear-gradient(to bottom, #3498db, #2980b9); /* Replace with your desired gradient colors */
+            background: linear-gradient(to bottom, #3498db, #2980b9); 
         }
 
         .logo-container {
@@ -32,13 +31,13 @@ $username = $_SESSION['username'] ?? 'User'; // Replace with the actual username
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 50vh; /* Adjust the height as needed */
+            height: 50vh; 
         }
 
         .logo {
-            font-size: 48px; /* Adjust the font size as needed */
+            font-size: 48px; 
             font-weight: bold;
-            color: #fff; /* Text color for the logo */
+            color: #fff; 
             margin-bottom: 20px;
         }
 

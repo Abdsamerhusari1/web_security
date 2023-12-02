@@ -1,4 +1,5 @@
 <?php
+// Check if the connection is not secure (HTTP) and redirect to HTTPS if needed.
 if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
     $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     header("Location: $redirectURL");
@@ -7,8 +8,9 @@ if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
 ?>
 
 <?php
+// Display an error message if it is set and not empty.
 if (isset($error_message) && !empty($error_message)) {
-	echo '<p style="color: red;">' . $error_message . '</p>';
+    echo '<p style="color: red;">' . $error_message . '</p>';
 }
 ?>
 
@@ -17,21 +19,21 @@ if (isset($error_message) && !empty($error_message)) {
 <?php
 session_start();
 
-// Define a flag to check if logout is successful
+// Define a flag to check if logout is successful.
 $logoutSuccess = false;
 
 if (isset($_SESSION)) {
-    // Unset all session variables
+    // Unset all session variables.
     $_SESSION = array();
 
-    // Destroy the session
+    // Destroy the session.
     session_destroy();
 
-    // Set logout flag to true
+    // Set logout flag to true.
     $logoutSuccess = true;
 }
 
-// Delayed redirect to login page
+// Delayed redirect to the login page.
 header("Refresh: 3;url=login.php");
 ?>
 
@@ -45,7 +47,7 @@ header("Refresh: 3;url=login.php");
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
         <?php if ($logoutSuccess): ?>
-            <p class="text-green-500 text-center">You have been successfully logged out. Redirecting to login page...</p>
+            <p class="text-green-500 text-center">You have been successfully logged out. Redirecting to the login page...</p>
         <?php endif; ?>
     </div>
 </body>

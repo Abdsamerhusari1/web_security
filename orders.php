@@ -2,13 +2,14 @@
 session_start();
 require_once('backend/db_connect.php');
 
+// Check if the user is not logged in, redirect to the login page.
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     header("location: login.php");
     exit;
 }
 
 // Retrieve the user's orders
-$user_id = $_SESSION["user_id"]; // Assuming you store user_id in the session
+$user_id = $_SESSION["user_id"];
 $query = "SELECT * FROM orders WHERE user_id = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $user_id);
@@ -55,8 +56,6 @@ $result = $stmt->get_result();
             <p class="text-center">No orders found.</p>
         <?php endif; ?>
     </div>
-
-
 
     <!-- Footer -->
     <footer class="bg-gray-800 text-white text-center p-4 mt-auto">

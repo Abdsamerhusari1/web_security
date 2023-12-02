@@ -1,22 +1,20 @@
 <?php
+session_start();
+require_once('backend/db_connect.php');
+
+// Check if the connection is not secure (HTTP) and redirect to HTTPS if needed.
 if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
     $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     header("Location: $redirectURL");
     exit;
 }
-?>
 
-<?php
-global $conn;
+// Display an error message if it is set and not empty.
 if (isset($error_message) && !empty($error_message)) {
 	echo '<p style="color: red;">' . $error_message . '</p>';
 }
-?>
 
-<?php
-session_start();
-require_once('backend/db_connect.php');
-
+// Function to add a product to the cart.
 function addToCart($productId, $quantity, $price) {
     if (!isset($_SESSION['cart'][$productId])) {
         $_SESSION['cart'][$productId] = ['quantity' => 0, 'price' => $price];
@@ -24,19 +22,22 @@ function addToCart($productId, $quantity, $price) {
     $_SESSION['cart'][$productId]['quantity'] += $quantity;
 }
 
+// Check if the "Add to Cart" button was clicked.
 if (isset($_POST['add_to_cart'])) {
     $productId = $_POST['product_id'];
-    $quantity = 1; // You can modify to allow different quantities
-    $price = $_POST['product_price']; // Should be a hidden input from the form
+    $quantity = 1; 
+    $price = $_POST['product_price']; 
     addToCart($productId, $quantity, $price);
 }
 
+// Display a success message if it is set and not empty.
 if (isset($_SESSION['successMessage']) && !empty($_SESSION['successMessage'])) {
     echo '<p class="text-green-600 text-center">' . $_SESSION['successMessage'] . '</p>';
     // Unset the success message after displaying it so it doesn't show again on page refresh
     unset($_SESSION['successMessage']);
 }
 
+// Retrieve product data from the database.
 $query = "SELECT * FROM products";
 $result = $conn->query($query);
 ?>
