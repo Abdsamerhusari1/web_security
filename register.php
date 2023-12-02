@@ -13,8 +13,12 @@ if (isset($error_message) && !empty($error_message)) {
 ?>
 <title>Register</title>
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 	session_start();
 	require_once('backend/db_connect.php');
+
 
 	define('PEPPER', 'kQa9e4v8Jy3Cf1u5Rm7N0w2Hz8G6pX');
 
@@ -114,10 +118,12 @@ if (isset($error_message) && !empty($error_message)) {
 					// Hash the password with the pepper
 					$password_hash = pepperedHash($password);
 
-					$insert = $conn->prepare("INSERT INTO users (username, password_hash, address) VALUES (?, ?, ?)");
-					$insert->bind_param("sss", $username, $password_hash, $address);
+                    $insert = $conn->prepare("INSERT INTO users (username, password_hash, address) VALUES (?, ?, ?)");
+                    $insert->bind_param("sss", $username, $password_hash, $address);
 					
 					if ($insert->execute()) {
+						$userId = $conn->insert_id;
+					
 						$_SESSION['loggedin'] = true;
 						$_SESSION['user_id'] = $conn->insert_id; // Get the new user's ID
 						$_SESSION['username'] = $username;

@@ -130,8 +130,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 		<form action="login.php<?php echo !empty($_GET['from']) ? '?from=' . htmlspecialchars($_GET['from']) : ''; ?>" method="post" class="max-w-md mx-auto mt-4">
             <div class="mb-4">
                 <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username:</label>
-                <input type="text" id="username" name="username" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            </div>
+				<input type="text" id="username" name="username" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>">
+				<div style="display: none;"><?php echo htmlspecialchars($_POST['username']); ?></div>
+			</div>
 
             <div class="mb-6">
                 <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
