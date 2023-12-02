@@ -25,7 +25,7 @@ setcookie("name", "value", ["secure" => true]);
 */
 
 //Secure cookies are only sent over HTTPS connections.
-setcookie("name", "value", ["secure" => true, "httponly" => true, "samesite" => "strict"]);
+//setcookie("name", "value", ["secure" => true, "httponly" => true, "samesite" => "strict"]);
 // Start or resume a session
 session_start();
 
@@ -50,9 +50,9 @@ $redirect = isset($_GET['from']) && $_GET['from'] === 'checkout' ? 'cart.php' : 
 // Check if the form was submitted using POST method
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get and trim the username from the POST data
-    $username = trim(htmlspecialchars($_POST["username"]));
+    $username = trim(($_POST["username"]));
     // Get and trim the password from the POST data
-    $password = trim(htmlspecialchars($_POST["password"]));
+    $password = trim(($_POST["password"]));
 
     // Check if the user has exceeded the maximum login attempts
     if (isset($_SESSION['login_attempts'][$username]) && $_SESSION['login_attempts'][$username]['count'] >= $maxLoginAttempts) {
@@ -186,7 +186,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <h1 class="text-2xl font-bold text-center">User Login</h1>
 
     <!-- Login form -->
-    <form action="login.php<?php echo !empty($_GET['from']) ? '?from=' . htmlspecialchars($_GET['from']) : ''; ?>" method="post" class="max-w-md mx-auto mt-4">
+    <form action="login.php<?php echo !empty($_GET['from']) ? '?from=' . ($_GET['from']) : ''; ?>" method="post" class="max-w-md mx-auto mt-4">
         <!-- Username input -->
         <div class="mb-4">
             <!-- Label for username -->
@@ -206,7 +206,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <!-- Display error message if any -->
             <?php
             if (!empty($errorMessage)) {
-                echo '<p class="text-red-500 text-sm">' . htmlspecialchars($errorMessage) . '</p>';
+                echo '<p class="text-red-500 text-sm">' . ($errorMessage) . '</p>';
             }
 
             ?>
@@ -219,7 +219,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <?php
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            echo '<p class="text-gray-700 mt-2">Username Entered: ' . htmlspecialchars($username) . '</p>';
+            echo '<p class="text-gray-700 mt-2">Username Entered: ' . ($username) . '</p>';
         }
         ?>
         </form>

@@ -102,9 +102,9 @@ $successMessage = "";
 // Check if the form was submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Capture and trim the user input
-    $username = trim(htmlspecialchars($_POST["username"]));
-    $password = trim(htmlspecialchars($_POST["password"]));
-    $address = trim(htmlspecialchars($_POST["address"]));
+    $username = trim(($_POST["username"]));
+    $password = trim(($_POST["password"]));
+    $address = trim(($_POST["address"]));
 
     // Check if all fields are filled
     if (empty($username) || empty($password) || empty($address)) {
@@ -189,10 +189,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 				<?php 
 				if (!empty($errorMessage)) {
-					echo '<p class="text-red-500 text-center">' . htmlspecialchars($errorMessage) . '</p>';
+					echo '<p class="text-red-500 text-center">' . ($errorMessage) . '</p>';
 				}
 				if (!empty($successMessage)) {
-					echo '<p class="text-green-500 text-center">' . htmlspecialchars($successMessage) . '</p>';
+					echo '<p class="text-green-500 text-center">' . ($successMessage) . '</p>';
 				}
 				?>
 
@@ -218,8 +218,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 					</div>
                     <?php
                     if ($_SERVER["REQUEST_METHOD"] == "POST") {
-                        echo '<p class="text-gray-700 mt-2">Username Entered: ' . htmlspecialchars($username) . '</p>';
-                        echo '<p class="text-gray-700">Home Address Entered: ' . htmlspecialchars($address) . '</p>';
+                        echo '<p class="text-gray-700 mt-2">Username Entered: ' . ($username) . '</p>';
+                        echo '<p class="text-gray-700">Home Address Entered: ' . ($address) . '</p>';
                     }
                     ?>
 				</form>
