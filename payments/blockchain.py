@@ -74,9 +74,11 @@ class Blockchain(object):
             'signature': signature,
         }
 
+
         # Verify the transaction signature
         if sender == "0" or self.verify_transaction_signature(transaction):
             # If the signature is valid, add the transaction to the list
+            transaction['sender'] = transaction['sender'].replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
             self.current_transactions.append(transaction)
             return self.last_block['index'] + 1
         else:
@@ -350,7 +352,4 @@ def full_chain():
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5002)
 
-#if __name__ == "__main__":
-#    context = ('cert.pem', 'key.pem')  
-#    app.run(host='0.0.0.0', port=5002, ssl_context=context)
     

@@ -46,7 +46,10 @@ function getProductDetails($conn, $orderDetails) {
     return $productDetails;
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['orderDetails'])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST['orderDetails'])) {
+
+    
     $orderDetails = json_decode(base64_decode($_POST['orderDetails']), true);
     $productDetails = getProductDetails($conn, $orderDetails);
 
@@ -58,8 +61,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['orderDetails'])) {
     // Store order details and total amount in session for later use
     $_SESSION['orderDetails'] = $productDetails;
     $_SESSION['totalAmount'] = $totalAmount;
+    }
+
 }
+
 $hashedPublicKey = 'a5da4d31a0a674f3ad9cdd3c83fc78176381e1769a3212718cc6a3ff800e03f9'; 
+
+
 ?>
 
 <!DOCTYPE html>
@@ -102,10 +110,17 @@ $hashedPublicKey = 'a5da4d31a0a674f3ad9cdd3c83fc78176381e1769a3212718cc6a3ff800e
                 <p class="font-bold mt-4">Total Amount: $<?= number_format($totalAmount, 2) ?></p>
 
                 <p class="font-bold mt-4">Hashed Public Key: <span id="hashedKey"><?php echo $hashedPublicKey; ?></span></p>
-                <button onclick="copyHashedKey()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4">Copy Hashed Key</button>
 
-                <form action="payment_confirmation.php" method="post">
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4">Pay</button>
+               <!-- Payment Form -->
+               <form action="payment_confirmation.php" method="post">
+                    <!-- Include order details as hidden input -->
+                    <input type='hidden' name='orderDetails' value='<?= base64_encode(json_encode($orderDetails)) ?>'>
+                    
+                    <!-- Field for Transaction ID -->
+                    <label for="transactionId">Transaction ID:</label>
+                    <input type="text" id="transactionId" name="transactionId" required class="p-2 border rounded mb-4">
+
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Confirm Payment</button>
                 </form>
             <?php else: ?>
                 <p class="text-red-500 text-lg mt-4">Error: No order details found. Please try again.</p>
@@ -117,12 +132,6 @@ $hashedPublicKey = 'a5da4d31a0a674f3ad9cdd3c83fc78176381e1769a3212718cc6a3ff800e
         © 2023 Group 2 Shop
     </footer>
     <?php $conn->close(); ?>
-    <script>
-        function copyHashedKey() {
-            var copyText = document.getElementById("hashedKey");
-            navigator.clipboard.writeText(copyText.textContent);
-            alert("Hashed key copied: " + copyText.textContent);
-        }
-    </script>
+
 </body>
 </html>

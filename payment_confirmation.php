@@ -75,7 +75,7 @@ $username = $_SESSION['username'] ?? 'User'; // Replace with the actual username
 
                 setTimeout(function() {
                     // Redirect to receipt page
-                    window.location.href = 'receipt.php';
+                    window.location.href = 'handling_order.php';
                 }, 5000); // Display success message for 5 seconds before redirecting
             }, 5000); // Simulate a 10-second payment processing delay
         }

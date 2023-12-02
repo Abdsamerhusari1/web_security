@@ -43,15 +43,15 @@ def mine_block():
         return None
 
 def main():
-    #sender_public_key_path = input("Enter your public key file path: ")
-    #private_key_pem_path = input("Enter your private key file path: ")
-    #recipient_hash = input("Enter store's hashed public key: ")
-    #amount = float(input("Enter the amount to send: "))
+    sender_public_key_path = input("Enter your public key file path: ")
+    private_key_pem_path = input("Enter your private key file path: ")
+    recipient_hash = input("Enter store's hashed public key: ")
+    amount = float(input("Enter the amount to send: "))
 
-    sender_public_key_path = 'public_key.pem'
-    private_key_pem_path = 'private_key.pem'
-    recipient_hash = 'a5da4d31a0a674f3ad9cdd3c83fc78176381e1769a3212718cc6a3ff800e03f9'
-    amount = float('11000000')
+    #sender_public_key_path = 'public_key.pem'
+    #private_key_pem_path = 'private_key.pem'
+    #recipient_hash = 'a5da4d31a0a674f3ad9cdd3c83fc78176381e1769a3212718cc6a3ff800e03f9'
+    #amount = float('11000000')
 
     sender_public_key = read_pem_file(sender_public_key_path)
     private_key_pem = read_pem_file(private_key_pem_path)

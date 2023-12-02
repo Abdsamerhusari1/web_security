@@ -5,9 +5,11 @@ if (isset($error_message) && !empty($error_message)) {
 ?>
 <title>Register</title>
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 	session_start();
 	require_once('backend/db_connect.php');
-	require_once 'receipt/KeyGenerator.php'; 
 
 
 	define('PEPPER', 'kQa9e4v8Jy3Cf1u5Rm7N0w2Hz8G6pX');
@@ -15,10 +17,6 @@ if (isset($error_message) && !empty($error_message)) {
 	// salting by PASSWORD_DEFAULT which also use (default hashing algorithm bcrypt) and pepper
 	function pepperedHash($password) {
 		return password_hash($password . PEPPER, PASSWORD_DEFAULT);
-	}
-
-	function generateBlockchainAddress() {
-		return uniqid(); // Generates a unique ID
 	}
 
 	function isPasswordStrongEnough($password, $username, $address) {
@@ -112,11 +110,8 @@ if (isset($error_message) && !empty($error_message)) {
 					// Hash the password with the pepper
 					$password_hash = pepperedHash($password);
 
-					// Generate a unique blockchain address
-					$blockchainAddress = generateBlockchainAddress();
-
-                    $insert = $conn->prepare("INSERT INTO users (username, password_hash, address, blockchain_address) VALUES (?, ?, ?, ?)");
-                    $insert->bind_param("ssss", $username, $password_hash, $address, $blockchainAddress);
+                    $insert = $conn->prepare("INSERT INTO users (username, password_hash, address) VALUES (?, ?, ?)");
+                    $insert->bind_param("sss", $username, $password_hash, $address);
 					
 					if ($insert->execute()) {
 						$userId = $conn->insert_id;
