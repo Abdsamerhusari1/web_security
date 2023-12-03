@@ -9,10 +9,7 @@ if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
     exit;
 }
 
-// Display an error message if it is set and not empty.
-if (isset($error_message) && !empty($error_message)) {
-	echo '<p style="color: red;">' . $error_message . '</p>';
-}
+$searchResults = [];
 
 // Function to add a product to the cart.
 function addToCart($productId, $quantity, $price) {
@@ -30,23 +27,34 @@ if (isset($_POST['add_to_cart'])) {
     addToCart($productId, $quantity, $price);
 }
 
-// Display a success message if it is set and not empty.
-if (isset($_SESSION['successMessage']) && !empty($_SESSION['successMessage'])) {
-    echo '<p class="text-green-600 text-center">' . $_SESSION['successMessage'] . '</p>';
-    // Unset the success message after displaying it so it doesn't show again on page refresh
-    unset($_SESSION['successMessage']);
+// Determine the search term from either POST or GET requests
+if (isset($_GET['search'])) {
+    $searchTerm = $_GET['search'];
+} elseif (isset($_POST['search'])) {
+    $searchTerm = $_POST['search'];
+} else {
+    $searchTerm = '';
 }
 
-// Retrieve product data from the database.
-$query = "SELECT * FROM products";
-$result = $conn->query($query);
+if ($searchTerm) {
+    $query = "SELECT * FROM products WHERE name LIKE ?";
+    $stmt = $conn->prepare($query);
+    $likeTerm = "%" . $searchTerm . "%";
+    $stmt->bind_param("s", $likeTerm);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    while ($row = $result->fetch_assoc()) {
+        $searchResults[] = $row;
+    }
+}
 ?>
 
 <!DOCTYPE html>
 <html class="h-full">
 <head>
     <meta charset="UTF-8">
-    <title>Our Products</title>
+    <title>Search Results</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="flex flex-col min-h-screen bg-gray-100">
@@ -76,37 +84,29 @@ $result = $conn->query($query);
         </div>
     </nav>
 
-    <!-- Welcome Message -->
-    <?php if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true): ?>
-        <div class="mt-4 pl-9 mx-24">
-            <span class="text-2xl text-indigo-600 font-bold">Welcome, <?php echo htmlspecialchars($_SESSION["username"]); ?>!</span>
-        </div>
-    <?php endif; ?>
-
     <!-- Main Content Area -->
     <div class="container mx-auto px-4 mt-8">
-        <h1 class="text-2xl font-bold text-center">Our Products</h1>
-        
-        <?php if ($result && $result->num_rows > 0): ?>
+        <h1 class="text-2xl font-bold text-center">Search Results</h1>
+
+        <?php if (!empty($searchResults)): ?>
             <div class="grid md:grid-cols-3 gap-4 mt-6">
-                <?php while ($row = $result->fetch_assoc()): ?>
+                <?php foreach ($searchResults as $row): ?>
                     <div class="bg-white p-4 shadow rounded">
                         <h3 class="text-lg font-semibold"><?php echo htmlspecialchars($row['name']); ?></h3>
                         <img src="images/<?php echo htmlspecialchars($row['image']); ?>" alt="<?php echo htmlspecialchars($row['name']); ?>" class="w-32 h-auto my-2">
                         <p><?php echo htmlspecialchars($row['description']); ?></p>
                         <p>Price: $<?php echo htmlspecialchars($row['price']); ?></p>
                         <?php if ($row['stock'] > 0): ?>
-                            <p class="text-green-500">In stock</p>
-                            <form method="post" action="index.php">
+                            <form method="post" action="search.php">
+                                <!-- Include hidden fields for the product and the current search term -->
                                 <input type="hidden" name="product_id" value="<?php echo $row['product_id']; ?>">
                                 <input type="hidden" name="product_price" value="<?php echo $row['price']; ?>">
+                                <input type="hidden" name="search" value="<?php echo htmlspecialchars($searchTerm); ?>">
                                 <input type="submit" name="add_to_cart" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" value="Add to Cart">
                             </form>
-                        <?php else: ?>
-                            <p class="text-red-500">Out of stock</p>
-                        <?php endif; ?>
+                        <?php endif; ?>                   
                     </div>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
             </div>
         <?php else: ?>
             <p class="text-center">No products found.</p>
@@ -114,8 +114,8 @@ $result = $conn->query($query);
     </div>
 
     <!-- Footer -->
-	<footer class="bg-gray-800 text-white text-center p-4 mt-auto">
-		© 2023 Group 2 Shop
+    <footer class="bg-gray-800 text-white text-center p-4 mt-auto">
+        © 2023 Group 2 Shop
     </footer>
 
     <?php $conn->close(); ?>
