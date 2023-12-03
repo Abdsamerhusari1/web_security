@@ -1,5 +1,5 @@
 <?php
-// Redirect to HTTPS if the request is not secure
+// Check if the page is not using HTTPS and redirect to HTTPS
 if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
     $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     header("Location: $redirectURL");
@@ -11,8 +11,10 @@ if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
 // Display an error message if it is set
 if (isset($error_message) && !empty($error_message)) {
     echo '<p style="color: red;">' . $error_message . '</p>';
+    echo '<p style="color: red;">' . $error_message . '</p>';
 }
 ?>
+
 <title>Register</title>
 
 <?php
@@ -164,28 +166,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <!DOCTYPE html>
 <html class="h-full">
-	<head>
-		<meta charset="UTF-8">
-		<title>Register</title>
-		<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-	</head>
-	<body class="bg-gray-100 flex flex-col min-h-screen">
-		<!-- Navigation Bar -->
-		<nav class="bg-gray-800 p-4 text-white">
-			<div class="container mx-auto flex justify-between">
-				<div class="text-lg">Group 2 Shop</div>
-				<div>
-					<a href="index.php" class="px-3 hover:text-gray-300">Home</a>
-					<a href="cart.php" class="px-3 hover:text-gray-300">Cart</a>
-					<a href="login.php" class="px-3 hover:text-gray-300">Login</a>
-				</div>
-			</div>
-		</nav>
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-gray-800 p-4 text-white">
+        <div class="container mx-auto flex justify-between">
+            <div class="text-lg">Group 2 Shop</div>
+            <div>
+                <a href="index.php" class="px-3 hover:text-gray-300">Home</a>
+                <a href="cart.php" class="px-3 hover:text-gray-300">Cart</a>
+                <a href="login.php" class="px-3 hover:text-gray-300">Login</a>
+            </div>
+        </div>
+    </nav>
 
-		<!-- Main Content Area -->
-		<div class="flex-grow container mx-auto px-4 py-8">
-			<div class="max-w-md mx-auto bg-white p-6 shadow-md">
-				<h1 class="text-2xl font-bold text-center mb-4">User Registration</h1>
+    <!-- Main Content Area -->
+    <div class="flex-grow container mx-auto px-4 py-8">
+        <div class="max-w-md mx-auto bg-white p-6 shadow-md">
+            <h1 class="text-2xl font-bold text-center mb-4">User Registration</h1>
 
 				<?php 
 				if (!empty($errorMessage)) {
@@ -196,21 +198,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 				}
 				?>
 
-				<form action="register.php" method="post" class="space-y-4">
-					<div>
-						<label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username:</label>
-						<input type="text" id="username" name="username" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-					</div>
+            <form action="register.php" method="post" class="space-y-4">
+                <div>
+                    <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username:</label>
+                    <input type="text" id="username" name="username" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
 
-					<div>
-						<label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
-						<input type="password" id="password" name="password" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-					</div>
+                <div>
+                    <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
+                    <input type="password" id="password" name="password" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
 
-					<div>
-						<label for="address" class="block text-gray-700 text-sm font-bold mb-2">Home Address:</label>
-						<textarea id="address" name="address" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
-					</div>
+                <div>
+                    <label for="address" class="block text-gray-700 text-sm font-bold mb-2">Home Address:</label>
+                    <textarea id="address" name="address" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                </div>
 
 					<div class="flex items-center justify-between">
 						<input type="submit" value="Register" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
@@ -224,18 +226,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     ?>
 				</form>
 
-			<!-- Password Criteria -->
-			<div class="mt-6">
-				<div class="mt-6 p-4 bg-white rounded shadow">
-					<h3 class="text-md font-semibold mb-2">Password Requirements:</h3>
-					<ul class="list-disc list-inside">
-						<li>Minimum 8 characters long</li>
-						<li>Must include uppercase and lowercase letters, numbers, and special characters</li>
-						<li>Should not contain your username or address</li>
-						<li>Should not contain sequential or repetitive characters (like '123' or 'aaa')</li>
-						<li>Should not contain any common words or patterns (e.g., 'password')</li>
-					</ul>
-				</div>
-			</div>
-	</body>
+            <!-- Password Criteria -->
+            <div class="mt-6">
+                <div class="mt-6 p-4 bg-white rounded shadow">
+                    <h3 class="text-md font-semibold mb-2">Password Requirements:</h3>
+                    <ul class="list-disc list-inside">
+                        <li>Minimum 8 characters long</li>
+                        <li>Must include uppercase and lowercase letters, numbers, and special characters</li>
+                        <li>Should not contain your username or address</li>
+                        <li>Should not contain sequential or repetitive characters (like '123' or 'aaa')</li>
+                        <li>Should not contain any common words or patterns (e.g., 'password')</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
 </html>

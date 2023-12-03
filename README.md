@@ -104,7 +104,7 @@ balances complexity and security. Include explicit support for a password blackl
 most common passwords. The credentials must be reasonably safe from on-line brute-force attacks
 and off-line TMTO/Rainbow attacks. **done**
 
-* Secure the connection via TLS **working on**
+* Secure the connection via TLS **Done**
 
 * (visual) design of the web shop **done**
 
@@ -116,4 +116,4 @@ of requirements for the payment using a blockchain:
 for signatures.
 – There should be proof-of-work with a correct hash of the block.
 – A new block with a transaction should be added to the chain of blocks (you don’t need to
-implement a consensus algorithm). **working on**
+implement a consensus algorithm). **Done**

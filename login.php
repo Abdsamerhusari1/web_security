@@ -1,17 +1,17 @@
 <?php
+// Check if the connection is not secure (HTTP) and redirect to HTTPS if needed.
 if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
     $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     header("Location: $redirectURL");
     exit;
-} 
-?>
+}
 
-<?php
+// Display an error message if it is set and not empty.
 if (isset($error_message) && !empty($error_message)) {
-	echo '<p style="color: red;">' . $error_message . '</p>';
+    echo '<p style="color: red;">' . $error_message . '</p>';
 }
 ?>
-	
+
 <title>Login</title>
 <?php
 /*HTTPOnly Cookies: HTTPOnly cookies cannot be accessed through JavaScript,
@@ -44,7 +44,6 @@ $maxLoginAttempts = 3;
 // Define lockout time duration in seconds (30 minutes)
 $lockoutTime = 30 * 60;
 
-// Check if redirected from another page to login and store the redirection page
 $redirect = isset($_GET['from']) && $_GET['from'] === 'checkout' ? 'cart.php' : 'index.php';
 
 // Check if the form was submitted using POST method
@@ -163,6 +162,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <!-- Brand or company name -->
         <div class="text-lg">Group 2 Shop</div>
         <!-- Navigation links -->
+            <!-- Search Form -->
+            <div class="search-container">
+                <form action="search.php" method="get" class="flex items-center justify-center">
+                    <input type="text" placeholder="Search for products..." name="search" class="px-3 py-2 placeholder-gray-500 text-gray-900 rounded-l-md focus:outline-none focus:shadow-outline-blue focus:border-blue-300 focus:z-10 sm:text-sm sm:leading-5">
+                    <button type="submit" class="ml-3 flex-shrink-0 px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-r-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition duration-150 ease-in-out">Search</button>
+                </form>
+            </div>
         <div>
             <!-- Link to the home page -->
             <a href="index.php" class="px-3 hover:text-gray-300">Home</a>

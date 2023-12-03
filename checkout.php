@@ -1,12 +1,14 @@
 <?php
+// Check if the connection is not secure (HTTP) and redirect to HTTPS if needed.
 if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
     $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     header("Location: $redirectURL");
     exit;
-} 
+}
 ?>
 
 <?php
+// Display an error message if it is set and not empty.
 if (isset($error_message) && !empty($error_message)) {
 	echo '<p style="color: red;">' . $error_message . '</p>';
 }
@@ -16,21 +18,14 @@ if (isset($error_message) && !empty($error_message)) {
 
 <?php
 session_start();
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-include 'backend/db_connect.php'; 
-include 'receipt/KeyGenerator.php';
-include 'receipt/Transaction.php';
-include 'receipt/Blockchain.php';
-include 'receipt/ReceiptGenerator.php';
+require_once('backend/db_connect.php');
 
-// Redirect to login with a return path if not logged in
+// Redirect to login with a return path if not logged in.
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     $redirectDelay = 3; // Delay in seconds
     $redirectURL = "login.php?from=checkout";
-?>
-
+    ?>
+<!-- Redirect to login page if not logged in -->
 <!DOCTYPE html>
 <html class="h-full">
 <head>
@@ -41,134 +36,117 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
 </head>
 <body class="bg-gray-100 flex items-center justify-center h-screen">
     <div class="text-center">
-        <p class="text-green-500">Please log in to proceed with checkout. Redirecting to login page in <?php echo $redirectDelay; ?> seconds...</p>
+        <p class="text-green-500 text-lg">Please log in to proceed with checkout. Redirecting to the login page in <?php echo $redirectDelay; ?> seconds...</p>
     </div>
 </body>
 </html>
-
 <?php
     exit;
 }
 
-// If the user is logged in but the cart is empty, show a message
-if (empty($_SESSION['cart'])) {
-    echo "<p>Your cart is empty. Please add items to your cart before checking out.</p>";
-    echo "<a href='index.php'>Return to Products</a>";
-    exit;
+// Function to retrieve product details based on order details.
+function getProductDetails($conn, $orderDetails) {
+    $productDetails = [];
+    foreach ($orderDetails as $productId => $details) {
+        $stmt = $conn->prepare("SELECT name FROM products WHERE product_id = ?");
+        $stmt->bind_param("i", $productId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($product = $result->fetch_assoc()) {
+            $productDetails[$productId] = [
+                'name' => $product['name'],
+                'quantity' => $details['quantity'],
+                'price' => $details['price']
+            ];
+        }
+    }
+    return $productDetails;
 }
 
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST['orderDetails'])) {
+        // Decode and retrieve order details from the POST data.
+        $orderDetails = json_decode(base64_decode($_POST['orderDetails']), true);
+        $productDetails = getProductDetails($conn, $orderDetails);
 
+        // Calculate the total amount for the order.
+        $totalAmount = 0;
+        foreach ($productDetails as $item) {
+            $totalAmount += $item['quantity'] * $item['price'];
+        }
 
-
-// Retrieve user ID and cart items from the session
-$userId = $_SESSION['user_id']; // Replace with your actual session variable
-$cartItems = $_SESSION['cart']; // Assuming cart is stored in session
-
-// Calculate total amount from cart items
-$totalAmount = 0;
-foreach ($cartItems as $productId => $item) {
-	$totalAmount += $item['price'] * $item['quantity'];
+        // Store order details and total amount in the session for later use.
+        $_SESSION['orderDetails'] = $productDetails;
+        $_SESSION['totalAmount'] = $totalAmount;
+    }
 }
 
-// Placeholder for Blockchain transaction
-// Initialize blockchain
-$blockchain = new Blockchain();
-
-// Example transaction data (replace with actual data)
-$senderKeys = KeyGenerator::generateKeys();
-$receiverKeys = KeyGenerator::generateKeys();
-
-$transactionData = Transaction::create($senderKeys['publicKey'], $receiverKeys['publicKey'], $totalAmount);
-$signedTransaction = Transaction::sign($transactionData, $senderKeys['privateKey']);
-
-// Add transaction to blockchain
-$blockchain->addBlock([$signedTransaction], '0'); // '0' is a placeholder for the previous hash
-
-// Insert order into database
-$stmt = $conn->prepare("INSERT INTO orders (user_id, total) VALUES (?, ?)");
-$stmt->bind_param("id", $userId, $totalAmount);
-$stmt->execute();
-$orderId = $stmt->insert_id;
-
-// Insert each cart item into order_items table
-foreach ($cartItems as $productId => $item) {
-	$stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
-	$stmt->bind_param("iiid", $orderId, $productId, $item['quantity'], $item['price']);
-	$stmt->execute();
-}
-
-// Generate a receipt for the transaction
-$receipt = ReceiptGenerator::generate($blockchain, $signedTransaction);
-
-// Clear the cart from the session after checkout
-unset($_SESSION['cart']);
+$hashedPublicKey = 'a5da4d31a0a674f3ad9cdd3c83fc78176381e1769a3212718cc6a3ff800e03f9';
 ?>
 
-
-
 <!DOCTYPE html>
-<html lang="en">
+<html class="h-full">
 <head>
     <meta charset="UTF-8">
-    <title>Receipt</title>
+    <title>Checkout</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto mt-10 p-8 bg-white shadow-lg max-w-2xl">
-        <?php if (isset($error_message)): ?>
-            <p class="text-red-500 text-center"><?php echo $error_message; ?></p>
-            <div class="text-center mt-4">
-                <a href="products.php" class="bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded">Return to Products</a>
+<body class="flex flex-col min-h-screen bg-gray-100">
+    <!-- Navigation menu -->
+    <nav class="bg-gray-800 text-white text-center p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="text-lg">Group 2 Shop</div>
+            <div>
+                <!-- Navigation links based on user login status -->
+                <a href="index.php" class="px-3 hover:text-gray-300">Home</a>
+                <a href="cart.php" class="px-3 hover:text-gray-300">Cart</a>
+                <?php if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true): ?>
+                    <a href="logout.php" class="px-3 hover:text-gray-300">Logout</a>
+                <?php else: ?>
+                    <a href="login.php" class="px-3 hover:text-gray-300">Login</a>
+                <?php endif; ?>
             </div>
-        <?php else: ?>
-            <!-- Receipt Content -->
-            <h2 class="text-3xl font-bold mb-4 text-center">Order Receipt</h2>
+        </div>
+    </nav>
+    <div class="flex-grow container mx-auto px-4 py-8">
+        <div class="max-w-lg mx-auto">
+            <?php if(isset($productDetails)): ?>
+                <!-- Display checkout information if order details are available -->
+                <h2 class="text-2xl font-bold my-4">Checkout</h2>
+                <div>
+                    <h3 class="font-bold">Order Summary:</h3>
+                    <?php foreach($productDetails as $productId => $details): ?>
+                        <div class="bg-white p-4 rounded-lg shadow-lg my-4">
+                            <p><?= htmlspecialchars($details['name']) ?></p>
+                            <p>Quantity: <?= htmlspecialchars($details['quantity']) ?></p>
+                            <p>Price: $<?= number_format($details['price'], 2) ?></p>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <p class="font-bold mt-4">Total Amount: $<?= number_format($totalAmount, 2) ?></p>
+                <p class="font-bold mt-4">Hashed Public Key: <span id="hashedKey"><?php echo $hashedPublicKey; ?></span></p>
 
-            <!-- Order Details -->
-            <div class="mb-6">
-                <p><strong>Order ID:</strong> <?php echo $orderId; ?></p>
-                <p><strong>Date:</strong> <?php echo date("Y-m-d H:i:s"); ?></p>
-            </div>
+               <!-- Payment Form -->
+               <form action="payment_confirmation.php" method="post">
+                    <!-- Include order details as hidden input -->
+                    <input type='hidden' name='orderDetails' value='<?= base64_encode(json_encode($orderDetails)) ?>'>
 
-            <!-- Items Purchased Table -->
-            <div class="mb-6">
-                <h3 class="text-xl font-semibold mb-2">Items Purchased</h3>
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-200">
-                            <th class="border p-3">Product ID</th>
-                            <th class="border p-3">Quantity</th>
-                            <th class="border p-3">Price</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($cartItems as $productId => $item): ?>
-                        <tr>
-                            <td class="border p-3"><?php echo $productId; ?></td>
-                            <td class="border p-3"><?php echo $item['quantity']; ?></td>
-                            <td class="border p-3">$<?php echo number_format($item['price'], 2); ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+                    <!-- Field for Transaction ID -->
+                    <label for="transactionId">Transaction ID:</label>
+                    <input type="text" id="transactionId" name="transactionId" required class="p-2 border rounded mb-4">
 
-            <!-- Total Amount -->
-            <div class="mb-6">
-                <h3 class="text-xl font-semibold">Total Amount</h3>
-                <p class="text-lg">$<?php echo number_format($totalAmount, 2); ?></p>
-            </div>
-
-            <!-- Blockchain Transaction -->
-            <div class="mb-6">
-                <h3 class="text-xl font-semibold mb-2">Blockchain Transaction</h3>
-                <pre class="bg-gray-200 p-4"><?php echo htmlspecialchars(print_r($receipt, true)); ?></pre>
-            </div>
-
-            <div class="text-center mt-4">
-                <a href="index.php" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Continue Shopping</a>
-            </div>
-        <?php endif; ?>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Confirm Payment</button>
+                </form>
+            <?php else: ?>
+                <!-- Display an error message if no order details are found -->
+                <p class="text-red-500 text-lg mt-4">Error: No order details found. Please try again.</p>
+            <?php endif; ?>
+        </div>
     </div>
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center p-4 mt-auto">
+        © 2023 Group 2 Shop
+    </footer>
+    <?php $conn->close(); ?>
 </body>
 </html>
