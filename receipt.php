@@ -12,12 +12,20 @@
     <nav class="bg-gray-800 p-4 text-white">
         <div class="container mx-auto flex justify-between">
             <div class="text-lg">Group 2 Shop</div>
+            <!-- Search Form -->
+            <div class="search-container">
+                <form action="search.php" method="get" class="flex items-center justify-center">
+                    <input type="text" placeholder="Search for products..." name="search" class="px-3 py-2 placeholder-gray-500 text-gray-900 rounded-l-md focus:outline-none focus:shadow-outline-blue focus:border-blue-300 focus:z-10 sm:text-sm sm:leading-5">
+                    <button type="submit" class="ml-3 flex-shrink-0 px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-r-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition duration-150 ease-in-out">Search</button>
+                </form>
+            </div>
+
             <div>
                 <a href="index.php" class="px-3 hover:text-gray-300">Home</a>
                 <a href="cart.php" class="px-3 hover:text-gray-300">Cart</a>
-                
+
                 <?php if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true): ?>
-                    <a href="orders.php" class="px-3 hover:text-gray-300">My Orders</a> 
+                    <a href="orders.php" class="px-3 hover:text-gray-300">My Orders</a>
                     <a href="logout.php" class="px-3 hover:text-gray-300">Logout</a>
                 <?php else: ?>
                     <a href="login.php" class="px-3 hover:text-gray-300">Login</a>

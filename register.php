@@ -16,6 +16,8 @@ if (isset($error_message) && !empty($error_message)) {
 
 <title>Register</title>
 <?php
+// show the errors
+ini_set('display_errors', 1);
 session_start();
 require_once('backend/db_connect.php');
 
@@ -108,47 +110,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($passwordStrengthCheck !== true) {
             $errorMessage = $passwordStrengthCheck;
         } else {
-            // Check if username already exists in the database
-            $stmt = $conn->prepare("SELECT user_id FROM users WHERE username = ?");
-            $stmt->bind_param("s", $username);
-            $stmt->execute();
-            $stmt->store_result();
+            // Hash the password with the pepper
+            $password_hash = pepperedHash($password);
 
-            if ($stmt->num_rows > 0) {
-                $errorMessage = "Username already taken.";
+            // Directly store the username in the database (vulnerable)
+            $insertQuery = "INSERT INTO users (username, password_hash, address) VALUES ('$username', '$password_hash', '$address')";
+
+            if (mysqli_query($conn, $insertQuery)) {
+                $userId = mysqli_insert_id($conn);
+
+                $_SESSION['loggedin'] = true;
+                $_SESSION['user_id'] = $userId;
+                $_SESSION['username'] = $username;
+
+                $_SESSION['successMessage'] = "You have registered successfully and are now logged in.";
+                header("Location: index.php");
+                exit;
             } else {
-                // Hash the password with the pepper
-                $password_hash = pepperedHash($password);
-
-                // Insert the user into the database
-                $insert = $conn->prepare("INSERT INTO users (username, password_hash, address) VALUES (?, ?, ?)");
-                $insert->bind_param("sss", $username, $password_hash, $address);
-
-                if ($insert->execute()) {
-                    $userId = $conn->insert_id;
-
-                    $_SESSION['loggedin'] = true;
-                    $_SESSION['user_id'] = $conn->insert_id; // Get the new user's ID
-                    $_SESSION['username'] = $username;
-
-                    // Store the success message in a session variable
-                    $_SESSION['successMessage'] = "You have registered successfully and are now logged in.";
-                    // Redirect to the homepage
-                    header("Location: index.php");
-                    exit;
-                } else {
-                    $errorMessage = "Error: " . $conn->error;
-                }
-
-                $insert->close();
+                $errorMessage = "Error: " . mysqli_error($conn);
             }
-
-            $stmt->close();
         }
     }
 
-    $conn->close();
+    mysqli_close($conn);
 }
+
+
 ?>
 
 <!DOCTYPE html>
