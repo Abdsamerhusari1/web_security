@@ -27,3 +27,27 @@
   <br>"C:\xampp\php\php.ini" and "C:\xampp\php\php.ini-development" and "C:\xampp\php\windowsXamppPhp\php.ini-development" and "C:\xampp\php\php.ini-production" and "C:\xampp\php\windowsXamppPhp\php.ini-production"
   <br><br>Additionally, go to C:\xampp\php and create a file called "logs" and in that file create a file called "php_errors_log.txt"
   Then go to following files and change the line "error_log = php_errors_log" to "error_log = C:\xampp\php\logs\php_errors_log.txt"
+
+
+
+* Whether or not to add the httpOnly flag to the cookie, which makes it
+  inaccessible to browser scripting languages such as JavaScript.
+  session.cookie_httponly=1
+* Whether or not to add the secure flag to the cookie, which makes it only
+  accessible over a secure connection such as HTTPS.
+  session.cookie_secure =1 
+
+* The SameSite cookie attribute can prevent the browser from sending cookies along
+  with cross-site requests. This can be useful to mitigate CSRF (Cross-Site Request Forgery) attacks
+  session.cookie_samesite="Strict"
+
+session.use_cookies: Specifies if cookies should be used to transmit
+the session ID. Default is “1”.
+• session.use_only_cookies: Specifies if cookies should be the only way
+to store the session ID on the client. If this is set to “1”, a session ID sent
+in the URL will not be accepted. Default is “1” since PHP 5.3.0.
+• session.use_trans_sid: Specifies if relative links should be transparently rewritten to contain the session ID. Default is “0”.
+
+Another protection is of course to not allow the session ID to be sent in
+the URL at all. This is accomplished using session.use only cookies = 1 as
+

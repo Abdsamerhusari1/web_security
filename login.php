@@ -13,20 +13,44 @@ if (isset($error_message) && !empty($error_message)) {
 ?>
 
 <title>Login</title>
-
 <?php
+/*session_set_cookie_params([
+    'lifetime' => 1800, // match your session timeout
+    'path' => '/',
+    'domain' => '',
+    'secure' => true, // Send cookie only over HTTPS
+    'httponly' => true, // Prevent client-side access to the cookie
+    'samesite' => 'Strict', // prevents cookie from being sent by the browser with cross-site requests. Prevents CSRF-attacks
+]); */
+/*HTTPOnly Cookies: HTTPOnly cookies cannot be accessed through JavaScript,
+which makes them more resilient to XSS attacks. This is set using the httponly flag in the setcookie function
+setcookie("name", "value", ["httponly" => true]);
+*/
+
+/*
+Set Cookie with Secure Flag: If your site is HTTPS only (which is recommended), ensure all cookies have the Secure flag set:
+setcookie("name", "value", ["secure" => true]);
+*/
+
+//Secure cookies are only sent over HTTPS connections.
+setcookie("name", "value", ["secure" => true, "httponly" => true, "samesite" => "strict"]);
+// Start or resume a session
 session_start();
 require_once('backend/db_connect.php'); 
 
 // Define a secret pepper value for password hashing.
 define('PEPPER', 'kQa9e4v8Jy3Cf1u5Rm7N0w2Hz8G6pX');
 
+// Initialize an empty error message string
 $errorMessage = "";
+// Set the maximum allowed login attempts
 $maxLoginAttempts = 3;
-$lockoutTime = 30 * 60; // 30 minutes in seconds
+// Define lockout time duration in seconds (30 minutes)
+$lockoutTime = 30 * 60;
 
 $redirect = isset($_GET['from']) && $_GET['from'] === 'checkout' ? 'cart.php' : 'index.php';
 
+// Check if the form was submitted using POST method
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST["username"]);
     $password = trim($_POST["password"]);
@@ -52,10 +76,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bind_result($user_id, $password_hash);
             $stmt->fetch();
 
-            // Verify the password with the pepper.
+            // Verify the password with the appended pepper
             if (password_verify($password . PEPPER, $password_hash)) {
-                // Password is correct.
-                // Reset the login attempts for the user.
+                // Reset the login attempts for the user upon successful login
                 unset($_SESSION['login_attempts'][$username]);
 
                 // Start a new session.
@@ -102,10 +125,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <!DOCTYPE html>
 <html class="h-full">
 <head>
+    <!-- Set character encoding for the webpage -->
     <meta charset="UTF-8">
+    <!-- Set the title of the web page -->
     <title>Login</title>
+    <!-- Include Tailwind CSS for styling -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
+
+
 <body class="flex flex-col min-h-screen bg-gray-100">
     <!-- Navigation Bar -->
     <nav class="bg-gray-800 p-4 text-white">
@@ -141,15 +169,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div style="display: none;"><?php echo htmlspecialchars($_POST['username']); ?></div>
             </div>
 
-            <div class="mb-6">
-                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
-                <input type="password" id="password" name="password" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline">
-                
-                <?php 
-                if (!empty($errorMessage)) {
-                    echo '<p class="text-red-500 text-sm">' . htmlspecialchars($errorMessage) . '</p>';
-                }
-                ?>
+        <!-- Password input -->
+        <div class="mb-6">
+            <!-- Label for password -->
+            <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
+            <!-- Text field for password -->
+            <input type="password" id="password" name="password" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline">
+
+            <!-- Display error message if any -->
+            <?php
+            if ($_SERVER["REQUEST_METHOD"] == "POST") {
+                echo '<p style="color: blue;">Username Entered: ' . htmlspecialchars($username) . '</p>';
+            }
+            
+            if (!empty($errorMessage)) {
+                echo '<p class="text-red-500 text-sm">' . htmlspecialchars($errorMessage) . '</p>';
+            }
+
+            ?>
             </div>
 
             <div class="flex items-center justify-between">

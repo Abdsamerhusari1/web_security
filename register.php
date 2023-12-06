@@ -4,7 +4,7 @@ if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
     $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     header("Location: $redirectURL");
     exit;
-} 
+}
 ?>
 
 <?php
@@ -15,10 +15,12 @@ if (isset($error_message) && !empty($error_message)) {
 ?>
 
 <title>Register</title>
+
 <?php
-// show the errors
-ini_set('display_errors', 1);
+// Start the session
 session_start();
+
+// Include database connection script
 require_once('backend/db_connect.php');
 
 // Define a secret pepper value for password hashing
@@ -102,33 +104,54 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = trim($_POST["password"]);
     $address = trim($_POST["address"]);
 
+    // Check if all fields are filled
     if (empty($username) || empty($password) || empty($address)) {
         $errorMessage = "Please fill in all fields.";
     } else {
-        // Validate password strength
+        // Check password strength
         $passwordStrengthCheck = isPasswordStrongEnough($password, $username, $address);
         if ($passwordStrengthCheck !== true) {
             $errorMessage = $passwordStrengthCheck;
         } else {
-            // Hash the password with the pepper
-            $password_hash = pepperedHash($password);
+            // Check if the username already exists
+            $stmt = $conn->prepare("SELECT user_id FROM users WHERE username = ?");
+            $stmt->bind_param("s", $username);
+            $stmt->execute();
+            $stmt->store_result();
 
-            // Directly store the username in the database (vulnerable)
-            $insertQuery = "INSERT INTO users (username, password_hash, address) VALUES ('$username', '$password_hash', '$address')";
-
-            if (mysqli_query($conn, $insertQuery)) {
-                $userId = mysqli_insert_id($conn);
-
-                $_SESSION['loggedin'] = true;
-                $_SESSION['user_id'] = $userId;
-                $_SESSION['username'] = $username;
-
-                $_SESSION['successMessage'] = "You have registered successfully and are now logged in.";
-                header("Location: index.php");
-                exit;
+            // If the username exists, show an error message
+            if ($stmt->num_rows > 0) {
+                $errorMessage = "Username already taken.";
             } else {
-                $errorMessage = "Error: " . mysqli_error($conn);
+                // Hash the password
+                $password_hash = pepperedHash($password);
+
+                // Insert the new user into the database
+                $insert = $conn->prepare("INSERT INTO users (username, password_hash, address) VALUES (?, ?, ?)");
+                $insert->bind_param("sss", $username, $password_hash, $address);
+
+                // Execute the insertion and check for success
+                if ($insert->execute()) {
+                    // Set session variables and redirect to the homepage
+                    $_SESSION['loggedin'] = true;
+                    $_SESSION['user_id'] = $conn->insert_id; // Get the new user's ID
+                    $_SESSION['username'] = $username;
+
+                    // Store a success message in a session variable
+                    $_SESSION['successMessage'] = "You have registered successfully and are now logged in.";
+                    header("Location: index.php");
+                    exit;
+                } else {
+                    // Display an error message in case of a database error
+                    $errorMessage = "Error: " . $conn->error;
+                }
+
+                // Close the statement
+                $insert->close();
             }
+
+            // Close the statement
+            $stmt->close();
         }
     }
 
@@ -183,16 +206,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <input type="password" id="password" name="password" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
 
-                <div>
-                    <label for="address" class="block text-gray-700 text-sm font-bold mb-2">Home Address:</label>
-                    <textarea id="address" name="address" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
-                </div>
+					<div>
+						<label for="address" class="block text-gray-700 text-sm font-bold mb-2">Home Address:</label>
+						<textarea id="address" name="address" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+					</div>
+                    <?php
+                    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+                        echo '<p style="color: blue;">Username Entered: ' . htmlspecialchars($username) . '</p>';
+                    }
+                    ?>
+					<div class="flex items-center justify-between">
+						<input type="submit" value="Register" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+						<a href="login.php" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Already have an account?</a>
+					</div>
 
-                <div class="flex items-center justify-between">
-                    <input type="submit" value="Register" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    <a href="login.php" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Already have an account?</a>
-                </div>
-            </form>
+				</form>
 
             <!-- Password Criteria -->
             <div class="mt-6">
