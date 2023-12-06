@@ -62,16 +62,6 @@ CREATE TABLE order_items (
 
 ### Sample Data Insertion:
 
-- Insert sample user data:
-
-```sql
-INSERT INTO users (username, password_hash, address) VALUES 
-('testuser1', '[hash]', '123 Test Address, City, Country'),
-('testuser2', '[hash]', '456 Another St, City, Country');
-```
-
-- Insert sample product data:
-
 ```sql
 INSERT INTO products (name, description, price, stock, image) VALUES 
 ('First Product', 'Description for first product', 99.99, 10, '1.png'),
@@ -96,24 +86,3 @@ INSERT INTO products (name, description, price, stock, image) VALUES
 - If the login is successful, reset the counter.
 
 --------------------------------
-## To-Do List
-* server and PHP configuration and protection from attacks
-
-* The user is authenticated using username and password. Define a reasonable password policy that
-balances complexity and security. Include explicit support for a password blacklist to exclude the
-most common passwords. The credentials must be reasonably safe from on-line brute-force attacks
-and off-line TMTO/Rainbow attacks. **done**
-
-* Secure the connection via TLS **Done**
-
-* (visual) design of the web shop **done**
-
-* Checkout and payment. The payment should be processed via digital currency utilizing a blockchain
-which you can implement yourself or take a library of your choice. Once the payment is finished
-the user should be presented with a receipt with all details of the purchase. The following is a list
-of requirements for the payment using a blockchain:
-– The key generation for the wallet must be real, i.e., use actual asymmetric cryptography, same
-for signatures.
-– There should be proof-of-work with a correct hash of the block.
-– A new block with a transaction should be added to the chain of blocks (you don’t need to
-implement a consensus algorithm). **Done**
