@@ -18,6 +18,9 @@ if (isset($error_message) && !empty($error_message)) {
 
 <?php
 session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 require_once('backend/db_connect.php');
 
 // Redirect to login with a return path if not logged in.
@@ -64,6 +67,13 @@ function getProductDetails($conn, $orderDetails) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Check if the CSRF token is valid.
+    if (!isset($_POST['csrf_token'])) {
+        die('ERROR');
+    } else if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('Invalid CSRF token');
+    }
+    
     if (isset($_POST['orderDetails'])) {
         // Decode and retrieve order details from the POST data.
         $orderDetails = json_decode(base64_decode($_POST['orderDetails']), true);
@@ -130,6 +140,7 @@ $hashedPublicKey = 'a5da4d31a0a674f3ad9cdd3c83fc78176381e1769a3212718cc6a3ff800e
                <form action="payment_confirmation.php" method="post">
                     <!-- Include order details as hidden input -->
                     <input type='hidden' name='orderDetails' value='<?= base64_encode(json_encode($orderDetails)) ?>'>
+                    <input type='hidden' name='csrf_token' value='<?= $_SESSION['csrf_token'] ?>'>
 
                     <!-- Field for Transaction ID -->
                     <label for="transactionId">Transaction ID:</label>

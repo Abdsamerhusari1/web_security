@@ -20,6 +20,10 @@ if (isset($error_message) && !empty($error_message)) {
 // Start the session
 session_start();
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // Include database connection script
 require_once('backend/db_connect.php');
 
@@ -100,6 +104,13 @@ $successMessage = "";
 
 // Check if the form has been submitted (POST request)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Check if the CSRF token is valid
+    if (!isset($_POST['csrf_token'])) {
+        die('ERROR');
+    } else if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('Invalid CSRF token');
+    }
+
     $username = trim($_POST["username"]);
     $password = trim($_POST["password"]);
     $address = trim($_POST["address"]);
@@ -196,6 +207,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ?>
 
             <form action="register.php" method="post" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                 <div>
                     <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username:</label>
                     <input type="text" id="username" name="username" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">

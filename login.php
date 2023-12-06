@@ -36,6 +36,9 @@ setcookie("name", "value", ["secure" => true]);
 setcookie("name", "value", ["secure" => true, "httponly" => true, "samesite" => "strict"]);
 // Start or resume a session
 session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 require_once('backend/db_connect.php'); 
 
 // Define a secret pepper value for password hashing.
@@ -52,6 +55,13 @@ $redirect = isset($_GET['from']) && $_GET['from'] === 'checkout' ? 'cart.php' : 
 
 // Check if the form was submitted using POST method
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Check if the CSRF token is valid.
+    if (!isset($_POST['csrf_token'])) {
+        die('ERROR');
+    } else if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('Invalid CSRF token');
+    }
+
     $username = trim($_POST["username"]);
     $password = trim($_POST["password"]);
 
@@ -143,6 +153,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="search-container">
                 <form action="search.php" method="get" class="flex items-center justify-center">
                     <input type="text" placeholder="Search for products..." name="search" class="px-3 py-2 placeholder-gray-500 text-gray-900 rounded-l-md focus:outline-none focus:shadow-outline-blue focus:border-blue-300 focus:z-10 sm:text-sm sm:leading-5">
+                    <input type='hidden' name='csrf_token' value='<?= $_SESSION['csrf_token'] ?>'>
                     <button type="submit" class="ml-3 flex-shrink-0 px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-r-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition duration-150 ease-in-out">Search</button>
                 </form>
             </div>

@@ -27,7 +27,9 @@ function addToCart($productId, $quantity, $price) {
 
 // Check if the "Add to Cart" button was clicked.
 if (isset($_POST['add_to_cart'])) {
-    if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    if (!isset($_POST['csrf_token'])) {
+        die('ERROR');
+    } else if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die('Invalid CSRF token');
     }
 

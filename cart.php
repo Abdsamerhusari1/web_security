@@ -45,7 +45,9 @@ function updateCartQuantity($conn, $productId, $quantity) {
 
 // Process POST requests to update cart quantities.
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    if (!isset($_POST['csrf_token'])) {
+        die('ERROR');
+    } else if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die('Invalid CSRF token');
     }
 

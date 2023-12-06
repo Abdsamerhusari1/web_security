@@ -18,7 +18,6 @@ if (isset($error_message) && !empty($error_message)) {
 
 <?php
 session_start();
-
 // Define a flag to check if logout is successful.
 $logoutSuccess = false;
 
