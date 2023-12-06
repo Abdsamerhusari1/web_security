@@ -1,13 +1,4 @@
 <?php
-// Check if the connection is not secure (HTTP) and redirect to HTTPS if needed.
-if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
-    $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-    header("Location: $redirectURL");
-    exit;
-}
-?>
-
-<?php
 // Display an error message if it is set and not empty.
 if (isset($error_message) && !empty($error_message)) {
     echo '<p style="color: red;">' . $error_message . '</p>';
@@ -18,6 +9,9 @@ if (isset($error_message) && !empty($error_message)) {
 
 <?php
 session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 require_once('backend/db_connect.php');
 
 // Function to update the quantity of a product in the cart.
@@ -42,6 +36,10 @@ function updateCartQuantity($conn, $productId, $quantity) {
 
 // Process POST requests to update cart quantities.
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('Invalid CSRF token');
+    }
+
     foreach ($_POST['quantities'] as $productId => $quantity) {
         updateCartQuantity($conn, $productId, intval($quantity));
     }
@@ -87,6 +85,7 @@ function displayCart($conn) {
         echo "<div style='text-align: center;' class='text-lg font-bold my-4'>Total Price: $" . number_format($totalPrice, 2) . "</div>";
         echo "<form action='checkout.php' method='post'>";
         echo "<input type='hidden' name='orderDetails' value='" . base64_encode(json_encode($_SESSION['cart'])) . "'>";
+        echo "<input type='hidden' name='csrf_token' value='" . $_SESSION['csrf_token'] . "'>";
         echo "<div style='display: flex; justify-content: center;'><button type='submit' class='bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded'>Proceed to Checkout</button></div>";
         echo "</form>";
     } else {

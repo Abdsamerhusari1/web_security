@@ -1,11 +1,3 @@
-<?php
-// Check if the page is not using HTTPS and redirect to HTTPS
-if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
-    $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-    header("Location: $redirectURL");
-    exit;
-}
-?>
 
 <?php
 // Display an error message if it is set

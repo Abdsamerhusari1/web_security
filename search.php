@@ -1,13 +1,9 @@
 <?php
 session_start();
-require_once('backend/db_connect.php');
-
-// Check if the connection is not secure (HTTP) and redirect to HTTPS if needed.
-if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
-    $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-    header("Location: $redirectURL");
-    exit;
+if (empty($_SESSION['csrf_token'])) { // Generate a CSRF token if one doesn't exist
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+require_once('backend/db_connect.php');
 
 $searchResults = [];
 
@@ -21,6 +17,10 @@ function addToCart($productId, $quantity, $price) {
 
 // Check if the "Add to Cart" button was clicked.
 if (isset($_POST['add_to_cart'])) {
+    if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) { // Check if the CSRF token is valid
+        die('Invalid CSRF token');
+    }
+
     $productId = $_POST['product_id'];
     $quantity = 1; 
     $price = $_POST['product_price']; 
@@ -54,6 +54,7 @@ if ($searchTerm) {
 <html class="h-full">
 <head>
     <meta charset="UTF-8">
+    
     <title>Search Results</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
@@ -66,6 +67,7 @@ if ($searchTerm) {
             <div class="search-container">
                 <form action="search.php" method="get" class="flex items-center justify-center">
                     <input type="text" placeholder="Search for products..." name="search" class="px-3 py-2 placeholder-gray-500 text-gray-900 rounded-l-md focus:outline-none focus:shadow-outline-blue focus:border-blue-300 focus:z-10 sm:text-sm sm:leading-5">
+                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                     <button type="submit" class="ml-3 flex-shrink-0 px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-r-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition duration-150 ease-in-out">Search</button>
                 </form>
             </div>
@@ -86,6 +88,7 @@ if ($searchTerm) {
 
     <!-- Main Content Area -->
     <div class="container mx-auto px-4 mt-8">
+    <?php echo '<p class="text-gray-700 mt-2 text-center">You searched for: ' . ($searchTerm) . '</p>'; ?>
         <h1 class="text-2xl font-bold text-center">Search Results</h1>
 
         <?php if (!empty($searchResults)): ?>
@@ -101,18 +104,23 @@ if ($searchTerm) {
                                 <!-- Include hidden fields for the product and the current search term -->
                                 <input type="hidden" name="product_id" value="<?php echo $row['product_id']; ?>">
                                 <input type="hidden" name="product_price" value="<?php echo $row['price']; ?>">
-                                <input type="hidden" name="search" value="<?php echo htmlspecialchars($searchTerm); ?>">
+                                <input name="search" value="<?php echo ($searchTerm); ?>">
                                 <input type="submit" name="add_to_cart" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" value="Add to Cart">
                             </form>
-                        <?php endif; ?>                   
+                            
+                        <?php endif; ?>
+                                           
                     </div>
                 <?php endforeach; ?>
             </div>
         <?php else: ?>
             <p class="text-center">No products found.</p>
+            
         <?php endif; ?>
+        
     </div>
 
+    
     <!-- Footer -->
     <footer class="bg-gray-800 text-white text-center p-4 mt-auto">
         © 2023 Group 2 Shop
