@@ -213,6 +213,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <!-- Display error message if any -->
             <?php
+            if ($_SERVER["REQUEST_METHOD"] == "POST") {
+                echo '<p style="color: blue;">Username Entered: ' . htmlspecialchars($username) . '</p>';
+            }
+            
             if (!empty($errorMessage)) {
                 echo '<p class="text-red-500 text-sm">' . htmlspecialchars($errorMessage) . '</p>';
             }
@@ -225,11 +229,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 				<a href="register.php" class="text-md bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Register</a>
 			</div>
 
-        <?php
-        if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            echo '<p class="text-gray-700 mt-2">Username Entered: ' . htmlspecialchars($username) . '</p>';
-        }
-        ?>
         </form>
     </div>
 

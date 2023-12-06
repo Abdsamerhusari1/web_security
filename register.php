@@ -211,17 +211,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 						<label for="address" class="block text-gray-700 text-sm font-bold mb-2">Home Address:</label>
 						<textarea id="address" name="address" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
 					</div>
-
+                    <?php
+                    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+                        echo '<p style="color: blue;">Username Entered: ' . htmlspecialchars($username) . '</p>';
+                    }
+                    ?>
 					<div class="flex items-center justify-between">
 						<input type="submit" value="Register" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
 						<a href="login.php" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Already have an account?</a>
 					</div>
-                    <?php
-                    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-                        echo '<p class="text-gray-700 mt-2">Username Entered: ' . htmlspecialchars($username) . '</p>';
-                        echo '<p class="text-gray-700">Home Address Entered: ' . htmlspecialchars($address) . '</p>';
-                    }
-                    ?>
+
 				</form>
 
 			<!-- Password Criteria -->
