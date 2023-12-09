@@ -1,8 +1,6 @@
 <?php
 session_start();
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
+
 require_once('backend/db_connect.php');
 
 // Check if the connection is not secure (HTTP) and redirect to HTTPS if needed.
@@ -24,11 +22,6 @@ function addToCart($productId, $quantity, $price) {
 
 // Check if the "Add to Cart" button was clicked.
 if (isset($_POST['add_to_cart'])) {
-    if (!isset($_POST['csrf_token'])) {
-        die('ERROR');
-    } else if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        die('Invalid CSRF token');
-    }
 
     $productId = $_POST['product_id'];
     $quantity = 1; 
@@ -75,7 +68,6 @@ if ($searchTerm) {
             <div class="search-container">
                 <form action="search.php" method="get" class="flex items-center justify-center">
                     <input type="text" placeholder="Search for products..." name="search" class="px-3 py-2 placeholder-gray-500 text-gray-900 rounded-l-md focus:outline-none focus:shadow-outline-blue focus:border-blue-300 focus:z-10 sm:text-sm sm:leading-5">
-                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                     <button type="submit" class="ml-3 flex-shrink-0 px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-r-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition duration-150 ease-in-out">Search</button>
                 </form>
             </div>
