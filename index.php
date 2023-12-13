@@ -7,9 +7,9 @@ if (isset($error_message) && !empty($error_message)) {
 
 <?php
 session_start();
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
+// if (empty($_SESSION['csrf_token'])) {
+//     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+// }
 require_once('backend/db_connect.php');
 
 function addToCart($productId, $quantity, $price) {
@@ -20,9 +20,9 @@ function addToCart($productId, $quantity, $price) {
 }
 
 if (isset($_POST['add_to_cart'])) {
-    if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        die('Invalid CSRF token');
-    }
+    // if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    //     die('Invalid CSRF token');
+    // }
 
     $productId = $_POST['product_id'];
     $quantity = 1; // You can modify to allow different quantities
@@ -89,8 +89,8 @@ $result = $conn->query($query);
                             <p class="text-green-500">In stock</p>
                             <form method="post" action="index.php">
                                 <input type="hidden" name="product_id" value="<?php echo $row['product_id']; ?>">
-                                <input type="hidden" name="product_price" value="<?php echo $row['price']; ?>">
-                                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                                <input type="hidden" name="product_price" value="<?php echo $row['price']; ?>">  
+                               <!--<input type="hidden" name="csrf_token" value="<?php // echo $_SESSION['csrf_token']; ?>">-->
                                 <input type="submit" name="add_to_cart" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" value="Add to Cart">
                             </form>
                         <?php else: ?>

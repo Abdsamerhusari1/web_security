@@ -1,8 +1,8 @@
 <?php
 session_start();
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
+// if (empty($_SESSION['csrf_token'])) {
+//     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+// }
 require_once('backend/db_connect.php');
 
 // Function to update item quantity in the cart
@@ -24,9 +24,9 @@ function updateCartQuantity($conn, $productId, $quantity) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        die('Invalid CSRF token');
-    }
+    // if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    //     die('Invalid CSRF token');
+    // }
 
     foreach ($_POST['quantities'] as $productId => $quantity) {
         updateCartQuantity($conn, $productId, intval($quantity));
@@ -68,7 +68,7 @@ function displayCart($conn) {
 
         echo "<form action='checkout.php' method='post'>";
         echo "<input type='hidden' name='orderDetails' value='" . base64_encode(json_encode($_SESSION['cart'])) . "'>";
-        echo "<input type='hidden' name='csrf_token' value='" . $_SESSION['csrf_token'] . "'>";
+        //echo "<input type='hidden' name='csrf_token' value='" . $_SESSION['csrf_token'] . "'>";
         echo "<div style='display: flex; justify-content: center;'><button type='submit' class='bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded'>Proceed to Checkout</button></div>";
         echo "</form>";
     } else {
