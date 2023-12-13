@@ -78,7 +78,7 @@ def main():
             for transaction in mine_result['transactions']:
                 print("Block mined successfully, The transaction ID ", transaction['id'])
                 print("Amount", transaction['amount'])
-                #break
+                break
 
         else:
             print("Mining failed.")
