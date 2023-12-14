@@ -42,11 +42,12 @@
                     $order_id = $confirmation['order_id'];
                     $totalAmount = $confirmation['totalAmount'];
                     $timestamp = $confirmation['timestamp'];
-                    $user_id = $_SESSION['user_id']; // Assuming the user ID is still in the session
+                    $user_id = $_SESSION['user_id']; 
+                    $user_name = $_SESSION['username']; 
                 ?>
                 <div class="bg-white p-8 rounded-lg shadow-lg">
                     <h2 class="text-2xl font-bold">Order Confirmation</h2>
-                    <p><strong>Username:</strong> <?= htmlspecialchars($user_id) ?></p>
+                    <p><strong>Username:</strong> <?= htmlspecialchars($user_name) ?></p>
                     <p><strong>Total Amount:</strong> $<?= number_format($totalAmount, 2) ?></p>
                     <p><strong>Order Number:</strong> <?= number_format($order_id) ?></p>
                     <p><strong>Date:</strong> <?= htmlspecialchars($timestamp) ?></p>
