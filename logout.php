@@ -1,14 +1,12 @@
 <?php
-// Check if the connection is not secure (HTTP) and redirect to HTTPS if needed.
-if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
+/*if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
     $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     header("Location: $redirectURL");
     exit;
-} 
+} */
 ?>
 
 <?php
-// Display an error message if it is set and not empty.
 if (isset($error_message) && !empty($error_message)) {
     echo '<p style="color: red;">' . $error_message . '</p>';
 }
@@ -18,21 +16,16 @@ if (isset($error_message) && !empty($error_message)) {
 
 <?php
 session_start();
-// Define a flag to check if logout is successful.
 $logoutSuccess = false;
 
 if (isset($_SESSION)) {
-    // Unset all session variables.
     $_SESSION = array();
 
-    // Destroy the session.
     session_destroy();
 
-    // Set logout flag to true.
     $logoutSuccess = true;
 }
 
-// Delayed redirect to the login page.
 header("Refresh: 3;url=login.php");
 ?>
 

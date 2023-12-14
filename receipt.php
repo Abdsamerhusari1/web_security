@@ -1,10 +1,9 @@
 <?php 
-// Check if the connection is not secure (HTTP) and redirect to HTTPS if needed.
-if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
+/*if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
     $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     header("Location: $redirectURL");
     exit;
-}
+}*/
 
 
 session_start();
@@ -21,11 +20,9 @@ if (empty($_SESSION['csrf_token'])) {
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="flex flex-col min-h-screen bg-gray-100">
-    <!-- Navigation Bar -->
     <nav class="bg-gray-800 p-4 text-white">
         <div class="container mx-auto flex justify-between">
             <div class="text-lg">Group 2 Shop</div>
-            <!-- Search Form -->
             <div class="search-container">
                 <form action="search.php" method="get" class="flex items-center justify-center">
                     <input type="text" placeholder="Search for products..." name="search" class="px-3 py-2 placeholder-gray-500 text-gray-900 rounded-l-md focus:outline-none focus:shadow-outline-blue focus:border-blue-300 focus:z-10 sm:text-sm sm:leading-5">
@@ -76,7 +73,6 @@ if (empty($_SESSION['csrf_token'])) {
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="bg-gray-800 text-white text-center p-4 mt-auto">
         © 2023 Group 2 Shop
     </footer>

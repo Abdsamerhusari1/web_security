@@ -1,21 +1,18 @@
 <?php
-// Check if the connection is not secure (HTTP) and redirect to HTTPS if needed.
-if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
+/*if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
     $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     header("Location: $redirectURL");
     exit;
-}
+}*/
 
 session_start();
 require_once('backend/db_connect.php');
 
-// Check if the user is not logged in, redirect to the login page.
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     header("location: login.php");
     exit;
 }
 
-// Retrieve the user's orders
 $user_id = $_SESSION["user_id"];
 $query = "SELECT * FROM orders WHERE user_id = ?";
 $stmt = $conn->prepare($query);
@@ -32,7 +29,6 @@ $result = $stmt->get_result();
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="flex flex-col min-h-screen bg-gray-100">
-    <!-- Navigation Bar -->
     <nav class="bg-gray-800 p-4 text-white">
         <div class="container mx-auto flex justify-between">
             <div class="text-lg">Group 2 Shop</div>
@@ -45,7 +41,6 @@ $result = $stmt->get_result();
         </div>
     </nav>
 
-    <!-- Main Content Area -->
     <div class="container mx-auto px-4 mt-8">
         <h1 class="text-2xl font-bold text-center">My Orders</h1>
 
@@ -64,7 +59,6 @@ $result = $stmt->get_result();
         <?php endif; ?>
     </div>
 
-    <!-- Footer -->
     <footer class="bg-gray-800 text-white text-center p-4 mt-auto">
         © 2023 Group 2 Shop
     </footer>
