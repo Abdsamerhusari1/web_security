@@ -1,4 +1,9 @@
 <?php
+if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
+    $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    header("Location: $redirectURL");
+    exit;
+}
 session_start();
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -86,8 +91,8 @@ if ($searchTerm) {
 
 <div class="container mx-auto px-4 mt-8">
     <?php echo '<p class="text-gray-700 mt-2 text-center">You searched for: '
-        // . htmlspecialchars($searchTerm) .
-        . ($searchTerm) .
+         . htmlspecialchars($searchTerm) .
+        //. ($searchTerm) .
         '</p>'; ?>
     <h1 class="text-2xl font-bold text-center">Search Results</h1>
 
@@ -104,8 +109,8 @@ if ($searchTerm) {
                             <input type="hidden" name="product_id" value="<?php echo $row['product_id']; ?>">
                             <input type="hidden" name="product_price" value="<?php echo $row['price']; ?>">
                             <input name="search" value="<?php
-                            //echo htmlspecialchars($searchTerm);
-                            echo ($searchTerm);
+                            echo htmlspecialchars($searchTerm);
+                            //echo ($searchTerm);
                             ?>">
                             <input type="submit" name="add_to_cart" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" value="Add to Cart">
                         </form>

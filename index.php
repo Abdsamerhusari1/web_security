@@ -5,11 +5,11 @@ if (empty($_SESSION['csrf_token'])) {
 }
 require_once('backend/db_connect.php');
 
-/*if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
+if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
     $redirectURL = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     header("Location: $redirectURL");
     exit;
-}*/
+}
 
 
 if (isset($error_message) && !empty($error_message)) {

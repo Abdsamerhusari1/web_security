@@ -114,8 +114,9 @@ INSERT INTO products (name, description, price, stock, image) VALUES
 
 ### CSRF using XSS attack:
 1. Go to the index.php and comment the lines 8-12.
-2. Go to the search.php and comment the lines 2-6.
-3. Go to home page and enter the following in the search field: 
+2. Go to the cart.php and comment the lines 2-6.
+3. Go to the search.php and comment the lines 2-6 and lines 94 and 112, and uncomment 95 and 113.
+4. Go to home page and enter the following in the search field: 
 ```
   <script>
     
