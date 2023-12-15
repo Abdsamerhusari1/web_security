@@ -150,10 +150,9 @@ INSERT INTO products (name, description, price, stock, image) VALUES
 5. Open CSRF.html and click on the button and you will see that the cart is updated with the product.
 
 ### CSRF using XSS attack:
-1. Go to the cart.php and comment the lines 2-6.
-2. Go to the index.php and comment the lines 3-5 , 8-12, 27-31 and 116.
-3. Go to the search.php and comment the lines 3-5 , 19-21, 27-31 and 67.
-4. 
+1. Go to the index.php and comment the lines 8-12.
+2. Go to the search.php and comment the lines 2-6.
+3. Go to home page and enter the following in the search field: 
 ```
   <script>
     
@@ -202,3 +201,5 @@ INSERT INTO products (name, description, price, stock, image) VALUES
             form.submit();
         };
 </script>
+```
+4. Now you can see a product is added to the cart.
